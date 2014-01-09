@@ -5,6 +5,7 @@ import org.scalatest.Matchers
 import ru.wordmetrix.webcrawler._
 import java.net.URL
 import java.net.URI
+import ru.wordmetrix.utils.CFG
 
 class testGather extends FlatSpec with Matchers {
     val xml = <html><head><title>It's about a test</title></head><body>

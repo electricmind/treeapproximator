@@ -1,24 +1,21 @@
 package ru.wordmetrix.treeapproximator
-import ru.wordmetrix.webcrawler._
 
-import ru.wordmetrix.treeapproximator.TreeApproximator
-import ru.wordmetrix.treeapproximator.TreeApproximator._
-import scala.swing.Panel
-import java.awt.Color
-import java.awt.Graphics2D
-import swing._
-import event._
-import scala.util.Random.nextGaussian
-import java.awt.BasicStroke
-import scala.swing.event.Key._
-import java.awt.Point
-import Math._
-import ru.wordmetrix.smartfile.SmartFile._
-import ru.wordmetrix.vector.Vector
+import java.awt.{BasicStroke, Color, Graphics2D, Point}
+import java.lang.Math.{max, sqrt}
+
 import scala.Option.option2Iterable
 import scala.collection.TraversableOnce.flattenTraversableOnce
+import scala.swing.{Dimension, MainFrame, Panel, SimpleSwingApplication}
+import scala.swing.event.{KeyPressed, KeyReleased, KeyTyped, MouseClicked, MouseMoved}
+import scala.swing.event.Key.{Down, Enter, Escape, Left, PageDown, PageUp, Right, Space, Up}
+import scala.util.Random.nextGaussian
 
-// TODO: try paint all clusters inot different tinges.
+import ru.wordmetrix.smartfile.SmartFile.fromString
+import ru.wordmetrix.treeapproximator.TreeApproximator.{Leaf, Node, Tree}
+import ru.wordmetrix.utils.{CFG, debug}
+import ru.wordmetrix.vector.Vector
+
+// TODO: try paint all clusters into different tinge.
 
 object Draw2DMap extends SimpleSwingApplication {
     implicit val cfg = CFG(List("-d"))

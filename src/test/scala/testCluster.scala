@@ -3,13 +3,12 @@ import org.scalatest.FlatSpec
 import ru.wordmetrix.treeapproximator.TreeApproximator
 import ru.wordmetrix.vector.Vector
 import org.scalatest.Matchers
-import ru.wordmetrix.webcrawler._
-import java.net.URL
-import java.net.URI
+import java.net.{URL,URI}
 import scala.util.Random.{ nextBoolean, nextGaussian }
 import Math.abs
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import ru.wordmetrix.treeapproximator.{Cluster, Clusters}
 
 //@RunWith(classOf[JUnitRunner])
 class testCluster extends FlatSpec with Matchers {
