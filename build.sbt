@@ -11,6 +11,10 @@ libraryDependencies += "org.scala-lang" % "scala-swing" % "2.10.2"
 
 libraryDependencies += "org.scala-lang" % "scala-actors" % "2.10.2"
 
+libraryDependencies +=  "com.typesafe.akka" %% "akka-actor" % "2.2.3"
+
+libraryDependencies +=  "com.typesafe.akka" %% "akka-testkit" % "2.2.3"
+
 libraryDependencies += "org.scalatest" %% "scalatest" % "2.0.M6" % "test"
 
 libraryDependencies += "junit" % "junit" % "4.10" % "test"
