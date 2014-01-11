@@ -29,7 +29,7 @@ class TestWebGet extends TestKit(ActorSystem("TestKitUsageSpec"))
             val gather = TestProbe()
 
             val webget = system.actorOf(
-                WebGet.props(gather.ref, cfg),
+                WebGet.props(cfg),
                 "WebGetTest_1")
                 
             watch(webget)
@@ -41,7 +41,7 @@ class TestWebGet extends TestKit(ActorSystem("TestKitUsageSpec"))
                                 </a>
                             </body></html>
 
-            seedqueue.send(webget, SeedQueueRequest(uri))
+            seedqueue.send(webget, SeedQueueRequest(uri,gather.ref))
             seedqueue.expectMsg(SeedQueueGet)
             seedqueue.send(webget, SeedQueueEmpty)
             

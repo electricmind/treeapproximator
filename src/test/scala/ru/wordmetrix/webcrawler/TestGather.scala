@@ -1,17 +1,15 @@
 package ru.wordmetrix.webcrawler
 
 import java.net.URI
-
 import scala.concurrent.duration.DurationInt
-
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
-
 import Gather.{ GatherIntel, GatherLinkContext, GatherPage, GatherSeeds }
 import akka.actor.ActorSystem
 import akka.testkit.{ DefaultTimeout, ImplicitSender, TestKit, TestProbe }
 import ru.wordmetrix.utils.CFG
 import ru.wordmetrix.vector.Vector
 import ru.wordmetrix.webcrawler.LinkContext.FeatureName
+
 
 class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
 
@@ -22,6 +20,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
         system.shutdown()
     }
 
+    import Gather._
     val cfg = CFG()
 
     "An gather" should {
@@ -32,7 +31,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             val sample = TestProbe()
 
             val gather = system.actorOf(
-                Gather.props(queue.ref, storage.ref, sample.ref, cfg),
+                Gather.props(cfg),
                 "Gather_parses_a_page")
 
             val uri = new URI("http://example.org")
@@ -43,6 +42,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                                 </a>
                             </body></html>
 
+            queue.send(gather, GatherLink(storage.ref,sample.ref))
             queue.send(gather, GatherPage(uri, xml.toString))
 
             within(100 milliseconds) {

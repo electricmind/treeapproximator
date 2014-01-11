@@ -26,7 +26,7 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
     import Storage._
     import SampleHierarchy2Priority._
 
-    val cfg = CFG(List("-d","-ts","2","-tl","0.005"))
+    val cfg = CFG(List("-d", "-ts", "2", "-tl", "0.005"))
     def uri(n: Int) = new URI(s"http://example.org/${n}")
 
     def xml(n: Int) = <html><body>
@@ -53,26 +53,35 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
                 EvaluatePriorityMatrix.props(storageprop, gatherprop, seedqueueprop, sampleprop, cfg),
                 "TestEvaluatePriority_1")
 
+            def checkuri(n: Int): PartialFunction[Any, Unit] = {
+                val u = uri(n)
+
+                {
+                    case (SeedQueueRequest(`u`, _)) =>
+                }
+            }
+
             // Initial seed is sent     
             queue ! EvaluatePriorityMatrixSeed(uri(1))
-
+            gather.expectMsgClass(classOf[GatherLink])
+            
             // Initial phase
-            seedqueue.expectMsg(SeedQueueRequest(uri(1)))
+            seedqueue.expectMsgPF()(checkuri(1))
 
             // Targeting phase
             gather.send(queue, GatherSeeds(uri(1), Set(uri(2), uri(3), uri(4), uri(5), uri(6), uri(7)), Vector("test" -> 2.0)))
 
-            seedqueue.expectMsg(SeedQueueRequest(uri(2)))
+            seedqueue.expectMsgPF()(checkuri(2))
 
-            seedqueue.expectMsg(SeedQueueRequest(uri(3)))
+            seedqueue.expectMsgPF()(checkuri(3))
 
-            seedqueue.expectMsg(SeedQueueRequest(uri(4)))
+            seedqueue.expectMsgPF()(checkuri(4))
 
-            seedqueue.expectMsg(SeedQueueRequest(uri(5)))
+            seedqueue.expectMsgPF()(checkuri(5))
 
-            seedqueue.expectMsg(SeedQueueRequest(uri(6)))
-            
-            seedqueue.expectMsg(SeedQueueRequest(uri(7)))
+            seedqueue.expectMsgPF()(checkuri(6))
+
+            seedqueue.expectMsgPF()(checkuri(7))
 
             storage.expectMsg(StorageSign(uri(1)))
 
@@ -94,7 +103,7 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
             gather.send(queue, GatherSeeds(uri(6), Set(uri(6), uri(7)), Vector("test" -> 2.0, "test6" -> 0.5)))
 
             gather.send(queue, GatherSeeds(uri(7), Set(uri(6), uri(7)), Vector("test" -> 2.0, "test7" -> 0.25)))
-            
+
             //sample.expectMsg(1)
         }
     }
