@@ -31,7 +31,8 @@ class TestWebGet extends TestKit(ActorSystem("TestKitUsageSpec"))
             val webget = system.actorOf(
                 WebGet.props(gather.ref, cfg),
                 "WebGetTest_1")
-
+                
+            watch(webget)
             val uri = new URI("http://example.org")
             
             val xml = <html><body>
@@ -44,7 +45,10 @@ class TestWebGet extends TestKit(ActorSystem("TestKitUsageSpec"))
             seedqueue.expectMsg(SeedQueueGet)
             seedqueue.send(webget, SeedQueueEmpty)
             
-            gather.expectMsg(GatherPage(uri,""))
+            gather.expectMsgPF() {
+                case msg @ GatherPage(`uri`,_) => msg 
+            }
+            
             expectTerminated(webget)
         }
     }
