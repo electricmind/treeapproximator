@@ -57,7 +57,7 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
                 val u = uri(n)
 
                 {
-                    case (SeedQueueRequest(`u`, _)) =>
+                    case (SeedQueueRequest(`u`)) =>
                 }
             }
 
@@ -69,6 +69,8 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
             gather.expectMsgClass(classOf[GatherLink])
             
             // Initial phase
+            seedqueue.expectMsgClass(classOf[SeedQueueLink])
+            
             seedqueue.expectMsgPF()(checkuri(1))
 
             // Targeting phase

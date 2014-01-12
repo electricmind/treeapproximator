@@ -20,6 +20,7 @@ class TestWebGet extends TestKit(ActorSystem("TestKitUsageSpec"))
     }
 
     import SeedQueue._
+    import WebGet._
     val cfg = CFG()
 
     "A webget" should {
@@ -41,7 +42,7 @@ class TestWebGet extends TestKit(ActorSystem("TestKitUsageSpec"))
                                 </a>
                             </body></html>
 
-            seedqueue.send(webget, SeedQueueRequest(uri,gather.ref))
+            seedqueue.send(webget, WebGetRequest(uri,gather.ref))
             seedqueue.expectMsg(SeedQueueGet)
             seedqueue.send(webget, SeedQueueEmpty)
             
