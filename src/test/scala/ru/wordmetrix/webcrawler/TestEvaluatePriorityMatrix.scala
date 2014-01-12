@@ -63,6 +63,9 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
 
             // Initial seed is sent     
             queue ! EvaluatePriorityMatrixSeed(uri(1))
+            
+            storage.expectMsgClass(classOf[StorageVictim])
+
             gather.expectMsgClass(classOf[GatherLink])
             
             // Initial phase
