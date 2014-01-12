@@ -53,6 +53,38 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
             queue.expectMsg(SeedQueueGet)
         }
 
+        "answer announce that seeds are available" in {
+
+            val queue = TestProbe()
+            val webget = TestProbe()
+            val gather = TestProbe()
+
+            val webgetprop = Props(new Actor {
+                def receive = { case msg => webget.ref forward msg }
+            })
+
+            val seedqueue = system.actorOf(
+                SeedQueue.props(webgetprop, cfg),
+                "TestSeedQueue1")
+
+            val uri = new URI("http://example.org")
+
+            queue.send(seedqueue, SeedQueueRequest(uri, gather.ref))
+
+            webget.expectMsg(SeedQueueRequest(uri, gather.ref))
+
+            webget.send(seedqueue, SeedQueueGet)
+
+            webget.expectMsg(SeedQueueEmpty)
+
+            queue.expectMsg(SeedQueueGet)
+            
+            queue.send(seedqueue,SeedQueueAvailable)
+
+            queue.expectMsg(SeedQueueGet)
+        }
+
+        
         "queued a request" in {
 
             val queue = TestProbe()

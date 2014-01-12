@@ -104,6 +104,7 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
 
             gather.send(queue, GatherSeeds(uri(7), Set(uri(6), uri(7)), Vector("test" -> 2.0, "test7" -> 0.25)))
 
+            seedqueue.expectMsg(SeedQueueAvailable)
             //sample.expectMsg(1)
         }
     }
