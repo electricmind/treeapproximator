@@ -9,7 +9,8 @@ import akka.testkit.{ DefaultTimeout, ImplicitSender, TestKit, TestProbe }
 import ru.wordmetrix.utils.CFG
 import ru.wordmetrix.vector.Vector
 import ru.wordmetrix.webcrawler.LinkContext.FeatureName
-
+import akka.actor.Props
+import akka.actor.Actor
 
 class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
 
@@ -22,46 +23,133 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
 
     import Gather._
     val cfg = CFG()
-
+    def testParent(prop: => Props, name: String = "") = system.actorOf(Props(new Actor {
+        val child = context.actorOf(prop, "child")
+        def receive = {
+            case x if sender == child => testActor forward x
+            case x                    => child forward x
+        }
+    }))
     "An gather" should {
-        "parse a page" in {
 
+        def uri(n: Int) = new URI(s"http://en.wikipedia.org/$n")
+
+        def xml(n: Int) = <html><body>
+                                    <a href={ "http://en.wikipedia.org/" + n }>
+                                        Test Test Test Test Test
+                                    </a>
+                                    <a href={ "http://en.wikipedia.org/" + (n + 1) }>
+                                        Test Test Test Test Test
+                                    </a>
+                                    <a href={ "http://en.wikipedia.org/" + (n + 2) }>
+                                        Test Test Test Test Test
+                                    </a>
+                                </body></html>
+
+        "parse a page" in {
             val queue = TestProbe()
             val storage = TestProbe()
             val sample = TestProbe()
 
-            val gather = system.actorOf(
+            val gather = testParent(
                 Gather.props(cfg),
                 "Gather_parses_a_page")
 
-            val uri = new URI("http://example.org")
-            
-            val xml = <html><body>
-                                <a href="http://en.wikipedia.org/qq">
-                                    Test Test Test Test Test Test
-                                </a>
-                            </body></html>
+            queue.send(gather, GatherLink(storage.ref, sample.ref))
+            queue.send(gather, GatherPage(uri(1), xml(1).toString))
 
-            queue.send(gather, GatherLink(storage.ref,sample.ref))
-            queue.send(gather, GatherPage(uri, xml.toString))
-
-            within(100 milliseconds) {
-                queue.expectMsg(GatherSeeds(
-                    uri,
-                    Set(new URI("http://en.wikipedia.org/qq")),
-                    Vector("test" -> 6.0))
+            within(400 milliseconds) {
+                expectMsg(GatherSeeds(
+                    uri(1),
+                    Set(uri(1), uri(2), uri(3)),
+                    Vector("test" -> 15.0))
                 )
-                storage.expectMsg(GatherIntel(uri, "== html=="))
+                storage.expectMsg(GatherIntel(uri(1), "== html=="))
 
                 sample.expectMsg(GatherLinkContext(
-                    uri,
-                    Map(new URI("http://en.wikipedia.org/qq") ->
+                    uri(1),
+                    Map(uri(1) ->
                         Vector(
                             new FeatureName("a") -> 1.0,
+                            new FeatureName("body") -> 1.0
+                        ),
+                        uri(2) -> Vector(
+                            new FeatureName("a") -> 1.0,
+                            new FeatureName("body") -> 1.0
+                        ),
+                        uri(3) -> Vector(
+                            new FeatureName("a") -> 1.0,
                             new FeatureName("body") -> 1.0)
-                    ))
+                    )
+                )
                 )
             }
         }
+
+        "remove links if repeat" in {
+            val queue = TestProbe()
+            val storage = TestProbe()
+            val sample = TestProbe()
+
+            val gather = testParent(
+                Gather.props(cfg),
+                "Gather_parses_a_page")
+
+            queue.send(gather, GatherLink(storage.ref, sample.ref))
+            queue.send(gather, GatherPage(uri(1), xml(1).toString))
+
+            expectMsg(GatherSeeds(
+                uri(1),
+                Set(uri(1), uri(2), uri(3)),
+                Vector("test" -> 15.0))
+            )
+            storage.expectMsg(GatherIntel(uri(1), "== html=="))
+
+            sample.expectMsg(GatherLinkContext(
+                uri(1),
+                Map(uri(1) ->
+                    Vector(
+                        new FeatureName("a") -> 1.0,
+                        new FeatureName("body") -> 1.0
+                    ),
+                    uri(2) -> Vector(
+                        new FeatureName("a") -> 1.0,
+                        new FeatureName("body") -> 1.0
+                    ),
+                    uri(3) -> Vector(
+                        new FeatureName("a") -> 1.0,
+                        new FeatureName("body") -> 1.0)
+                )
+            ))
+
+            queue.send(gather, GatherPage(uri(2), xml(1).toString))
+
+            expectMsg(GatherSeeds(
+                uri(2),
+                Set(),
+                Vector("test" -> 15.0))
+            )
+
+            storage.expectMsg(GatherIntel(uri(2), "== html=="))
+
+            sample.expectMsg(GatherLinkContext(
+                uri(2),
+                Map(uri(1) ->
+                    Vector(
+                        new FeatureName("a") -> 1.0,
+                        new FeatureName("body") -> 1.0
+                    ),
+                    uri(2) -> Vector(
+                        new FeatureName("a") -> 1.0,
+                        new FeatureName("body") -> 1.0
+                    ),
+                    uri(3) -> Vector(
+                        new FeatureName("a") -> 1.0,
+                        new FeatureName("body") -> 1.0)
+                )
+            ))
+
+        }
+
     }
 }
