@@ -32,16 +32,16 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
     }))
     "An gather" should {
 
-        def uri(n: Int) = new URI(s"http://en.wikipedia.org/$n")
+        def uri(n: Int) = new URI(s"http://example.org/$n")
 
         def xml(n: Int) = <html><body>
-                                    <a href={ "http://en.wikipedia.org/" + n }>
+                                    <a href={ uri(n).toString() }>
                                         Test Test Test Test Test
                                     </a>
-                                    <a href={ "http://en.wikipedia.org/" + (n + 1) }>
+                                    <a href={ uri(n + 1).toString() }>
                                         Test Test Test Test Test
                                     </a>
-                                    <a href={ "http://en.wikipedia.org/" + (n + 2) }>
+                                    <a href={ uri(n + 2).toString() }>
                                         Test Test Test Test Test
                                     </a>
                                 </body></html>
@@ -149,6 +149,47 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 )
             ))
 
+        }
+
+        "remove links if different from parent" in {
+            val queue = TestProbe()
+            val storage = TestProbe()
+            val sample = TestProbe()
+
+            val gather = testParent(
+                Gather.props(cfg),
+                "Gather_parses_a_page")
+
+            queue.send(gather, GatherLink(storage.ref, sample.ref))
+            queue.send(gather, GatherPage(uri(1),
+                <html>
+                    <body>
+                        <a href="http://test.example.org"/>
+                        <a href="http://example.org/1"/>
+                    </body>
+                </html>.
+                    toString
+            ))
+
+            within(400 milliseconds) {
+                expectMsg(GatherSeeds(
+                    uri(1),
+                    Set(uri(1)),
+                    Vector())
+                )
+                storage.expectMsg(GatherIntel(uri(1), "== html=="))
+
+                sample.expectMsg(GatherLinkContext(
+                    uri(1),
+                    Map(uri(1) ->
+                        Vector(
+                            new FeatureName("a") -> 1.0,
+                            new FeatureName("body") -> 1.0
+                        )
+                    )
+                )
+                )
+            }
         }
 
     }
