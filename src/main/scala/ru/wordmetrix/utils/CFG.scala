@@ -8,7 +8,6 @@ import java.net.URI
  * CFG: Object that holds a set of the parameters of current session.
  */
 
- 
 object CFG {
     val rkey = """-(.+)""".r
 
@@ -23,7 +22,7 @@ object CFG {
         "sigma" -> 1.0,
         "limit" -> 1000,
         "cache" -> new File("/tmp/webgetcache")
-        )
+    )
 
     def apply(): CFG = this(List())
 
@@ -98,7 +97,7 @@ object CFG {
 class CFG(val path: File, val sampling: File, val isdebug: Boolean,
           val ish2p: Boolean, val servers: Int,
           val targeting: Double, val targets: Int,
-          val sigma: Double,val limit : Int,val cache : File, val seeds: List[URI]) {}
+          val sigma: Double, val limit: Int, val cache: File, val seeds: List[URI]) {}
 
 object debug {
     def apply(format: String, p: Any*)(implicit cfg: CFG) = {
@@ -116,14 +115,11 @@ object debug {
     def time[B](s: String)(f: => B)(implicit cfg: CFG): B = {
         val t = System.currentTimeMillis()
         val outcome = f
-        apply("%s","%s : time %d".format(s, (System.currentTimeMillis() - t) / 1))
+        apply("%s", "%s : time %d".format(s, (System.currentTimeMillis() - t) / 1))
         outcome
     }
 }
 
-trait CFGAware {
-    val name = "CFGAware"
-}
 object log {
     def apply(format: String, p: Any*)(implicit cfg: CFG) = {
         println({ if (cfg.isdebug) "* " else "" } + format.format(p: _*))
@@ -134,22 +130,26 @@ object log {
     }
 }
 
-object ActorDebug {
-    implicit def actor2ActorDebug(actor: CFGAware) = new ActorDebug(actor)
-}
-//import ru.wordmetrix.
-
-class ActorDebug(actor: CFGAware) {
+trait CFGAware {
+    val name = "CFGAware"
     def debug(format: String, p: Any*)(implicit cfg: CFG) =
-        ru.wordmetrix.utils.debug(actor, format, p: _*)
+       ru.wordmetrix.utils.debug(this, format, p: _*)
+        
     def log(format: String, p: Any*)(implicit cfg: CFG) =
-        ru.wordmetrix.utils.log(actor, format, p: _*)
+       ru.wordmetrix.utils.log(this, format,  p: _*)
+        
+    def time[B](s: String)(f: => B)(implicit cfg: CFG): B =
+        ru.wordmetrix.utils.debug.time(name + " : " + s)(f)(cfg)
+        
+    def trace[B](s: String)(f: => B)(implicit cfg: CFG): B =
+        ru.wordmetrix.utils.debug.trace(name + " : " + s)(f)(cfg)
+        
 }
 
 object Use {
     implicit def anyToUse[A](a: A) = new Use(a)
 }
-// 1 use (x => x + 1)
+
 class Use[A](a: A) {
     def use[B](f: A => B) = f(a)
 }

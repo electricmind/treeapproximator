@@ -3,8 +3,9 @@ package ru.wordmetrix.utils
 import java.net.URI
 import scala.util.matching.Regex.Match
 
-object Utils {
-    def uriToFilename(uri: URI) = """[/:_\-\\]""".r.replaceAllIn(
+object impl {
+    implicit class URIEx(uri : URI) {
+        def toFilename = """[/:_\-\\]""".r.replaceAllIn(
         """https?://""".r.replaceFirstIn(uri.toString, ""), x => x match {
             case Match("/") => "---"
             case Match("-") => "--"
@@ -15,9 +16,9 @@ object Utils {
             x.slice(0, 120).hashCode.toString
             case x => x
         }
-
-    def filenameToUri(s: String) =
-        new URI("http://" + """---|--|___|__""".r.replaceAllIn(
+    }
+    implicit class StirngEx(s: String) {
+        def toURI =    new URI("http://" + """---|--|___|__""".r.replaceAllIn(
             s,
             x => x match {
                 case Match("---") => "/"
@@ -26,4 +27,5 @@ object Utils {
                 case Match("___") => "_"
             }
         ))
+    }
 }

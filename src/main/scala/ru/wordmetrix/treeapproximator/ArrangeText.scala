@@ -1,17 +1,20 @@
 package ru.wordmetrix.treeapproximator
 
 import java.io.File
+
 import scala.Array.canBuildFrom
 import scala.Option.option2Iterable
+import scala.annotation.migration
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.util.Random
 import scala.xml.{ Text, Unparsed }
+
 import ru.wordmetrix.smartfile.SmartFile.{ fromFile, fromString, toFile }
 import ru.wordmetrix.treeapproximator.TreeApproximator.{ Leaf, Node, Tree }
+import ru.wordmetrix.utils.CFG
+import ru.wordmetrix.utils.Use.anyToUse
+import ru.wordmetrix.utils.debug
 import ru.wordmetrix.vector.Vector
-import ru.wordmetrix.utils.{CFG, CFGAware, log, debug}
-import ru.wordmetrix.utils.ActorDebug.actor2ActorDebug
-import ru.wordmetrix.utils.Use._
 
 object ArrangeText extends App {
     implicit lazy val cfg = CFG(List("-d"))
