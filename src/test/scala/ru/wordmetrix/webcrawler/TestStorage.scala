@@ -10,9 +10,8 @@ import ru.wordmetrix.utils.CFG
 import ru.wordmetrix.webcrawler.Storage.{StorageCompleted, StorageSign, StorageVictim}
 import akka.actor.PoisonPill
 
-
 class TestStorage extends TestKit(ActorSystem("TestStorage"))
-
+        with Tools
         with DefaultTimeout with ImplicitSender
         with WordSpecLike with Matchers with BeforeAndAfterAll {
 
@@ -34,11 +33,9 @@ class TestStorage extends TestKit(ActorSystem("TestStorage"))
                 Storage.props(cfg),
                 "TestStorage")
 
-            val uri = new URI("http://example.org")
-
             queue.send(storage, StorageVictim(seedqueue.ref))
-            gather.send(storage, GatherIntel(uri, "Test Test Test Test"))
-            queue.send(storage, StorageSign(uri))
+            gather.send(storage, GatherIntel(uri(1), "Test Test Test Test"))
+            queue.send(storage, StorageSign(uri(1)))
         }
     }
    
@@ -54,15 +51,14 @@ class TestStorage extends TestKit(ActorSystem("TestStorage"))
                 Storage.props(cfg),
                 "TestStorageKiller")
 
-            val uri = new URI("http://example.org")
             watch(seedqueue.ref)
             queue.send(storage, StorageVictim(seedqueue.ref))
             
             for ( i <- 1 to 100 ) {
-                gather.send(storage, GatherIntel(uri, "Test Test Test Test"))
+                gather.send(storage, GatherIntel(uri(1), "Test Test Test Test"))
             }
             
-            queue.send(storage, StorageSign(uri))
+            queue.send(storage, StorageSign(uri(1)))
             expectTerminated(seedqueue.ref)
             //seedqueue.expectMsg(PoisonPill)
             

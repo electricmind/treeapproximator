@@ -11,7 +11,7 @@ import ru.wordmetrix.vector.Vector
 import ru.wordmetrix.webcrawler.LinkContext.FeatureName
 
 class TestWebGet extends TestKit(ActorSystem("TestKitUsageSpec"))
-
+        with Tools
         with DefaultTimeout with ImplicitSender
         with WordSpecLike with Matchers with BeforeAndAfterAll {
 
@@ -32,24 +32,17 @@ class TestWebGet extends TestKit(ActorSystem("TestKitUsageSpec"))
             val webget = system.actorOf(
                 WebGet.props(cfg),
                 "WebGetTest_1")
-                
-            watch(webget)
-            val uri = new URI("http://example.org")
-            
-            val xml = <html><body>
-                                <a href="http://en.wikipedia.org/qq">
-                                    Test Test Test Test Test Test
-                                </a>
-                            </body></html>
 
-            seedqueue.send(webget, WebGetRequest(uri,gather.ref))
+            watch(webget)
+            
+            seedqueue.send(webget, WebGetRequest(uri(0), gather.ref))
             seedqueue.expectMsg(SeedQueueGet)
             seedqueue.send(webget, SeedQueueEmpty)
-            
+
             gather.expectMsgPF() {
-                case msg @ GatherPage(`uri`,_) => msg 
+                case msg @ GatherPage(u, _) if u == uri(0) => msg
             }
-            
+
             expectTerminated(webget)
         }
     }

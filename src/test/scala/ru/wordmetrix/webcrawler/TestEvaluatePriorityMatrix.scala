@@ -13,6 +13,7 @@ import akka.actor.Props
 import akka.actor.Actor
 
 class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePriorityMatrix"))
+with Tools
         with DefaultTimeout with ImplicitSender
         with WordSpecLike with Matchers with BeforeAndAfterAll {
 
@@ -27,21 +28,7 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
     import SampleHierarchy2Priority._
 
     val cfg = CFG(List("-d", "-ts", "2", "-tl", "0.005"))
-    def uri(n: Int) = new URI(s"http://example.org/${n}")
-
-    def xml(n: Int) = <html><body>
-                                <a href="http://en.wikipedia.org/${n+1}">
-                                    Test Test Test Test Test Test
-                                </a>
-                            </body></html>
-
-    def TestActor() = {
-        val actor = TestProbe()
-        (actor, Props(new Actor {
-            def receive = { case msg => actor.ref forward msg }
-        }))
-    }
-
+   
     "A queue" should {
         "init a process" in {
             val (storage, storageprop) = TestActor()

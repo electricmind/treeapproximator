@@ -1,5 +1,6 @@
 package ru.wordmetrix.webcrawler
 
+
 import java.net.URI
 import scala.concurrent.duration.DurationInt
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
@@ -13,7 +14,7 @@ import akka.actor.Props
 import akka.actor.Actor
 
 class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
-
+        with Tools
         with DefaultTimeout with ImplicitSender
         with WordSpecLike with Matchers with BeforeAndAfterAll {
 
@@ -23,28 +24,8 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
 
     import Gather._
     val cfg = CFG()
-    def testParent(prop: => Props, name: String = "") = system.actorOf(Props(new Actor {
-        val child = context.actorOf(prop, "child")
-        def receive = {
-            case x if sender == child => testActor forward x
-            case x                    => child forward x
-        }
-    }))
+    
     "An gather" should {
-
-        def uri(n: Int) = new URI(s"http://example.org/$n")
-
-        def xml(n: Int) = <html><body>
-                                    <a href={ uri(n).toString() }>
-                                        Test Test Test Test Test
-                                    </a>
-                                    <a href={ uri(n + 1).toString() }>
-                                        Test Test Test Test Test
-                                    </a>
-                                    <a href={ uri(n + 2).toString() }>
-                                        Test Test Test Test Test
-                                    </a>
-                                </body></html>
 
         "parse a page" in {
             val queue = TestProbe()
@@ -53,6 +34,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
 
             val gather = testParent(
                 Gather.props(cfg),
+                testActor,
                 "Gather_parses_a_page")
 
             queue.send(gather, GatherLink(storage.ref, sample.ref))
@@ -92,7 +74,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             val sample = TestProbe()
 
             val gather = testParent(
-                Gather.props(cfg),
+                Gather.props(cfg), testActor,
                 "Gather_parses_a_page")
 
             queue.send(gather, GatherLink(storage.ref, sample.ref))
@@ -157,7 +139,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             val sample = TestProbe()
 
             val gather = testParent(
-                Gather.props(cfg),
+                Gather.props(cfg),testActor,
                 "Gather_parses_a_page")
 
             queue.send(gather, GatherLink(storage.ref, sample.ref))
@@ -192,5 +174,11 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             }
         }
 
+    }
+
+    "A gather method" should {
+        "parse xml" in {
+            //gather.page2xml_whole(xml.toString) should be(xml)
+        }
     }
 }

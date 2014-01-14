@@ -13,6 +13,7 @@ import akka.actor.Props
 import akka.actor.Actor
 
 class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
+        with Tools
         with DefaultTimeout with ImplicitSender
         with WordSpecLike with Matchers with BeforeAndAfterAll {
 
@@ -24,30 +25,19 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
     import WebGet._
 
     val cfg = CFG()
-    def testParent(prop: => Props) = system.actorOf(Props(new Actor {
-        val child = context.actorOf(prop, "child")
-        def receive = {
-            case x if sender == child => testActor forward x
-            case x                    => child forward x
-        }
-    }))
 
     "A single-item seedqueue" should {
         val cfg = CFG(List("-n", "1"))
         "run one request" in {
 
             val queue = TestProbe()
-            val webget = TestProbe()
             val gather = TestProbe()
 
-            val webgetprop = Props(new Actor {
-                def receive = { case msg => webget.ref forward msg }
-            })
+            val (webget,webgetprop) = TestActor()
 
             val seedqueue = testParent(
-                SeedQueue.props(webgetprop, cfg))
-            /*,
-                "TestSeedQueue1")*/
+                SeedQueue.props(webgetprop, cfg), testActor,
+                "TestSeedQueue1")
 
             val uri = new URI("http://example.org")
 
@@ -74,10 +64,7 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
                 def receive = { case msg => webget.ref forward msg }
             })
 
-            val seedqueue = testParent(SeedQueue.props(webgetprop, cfg))
-            /*            val seedqueue = system.actorOf(
-                SeedQueue.props(webgetprop, cfg),
-                "TestSeedQueue1")*/
+            val seedqueue = testParent(SeedQueue.props(webgetprop, cfg), testActor)
 
             val uri = new URI("http://example.org")
             queue.send(seedqueue, SeedQueueLink(gather.ref))
@@ -100,16 +87,13 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
         "queued a request" in {
 
             val queue = TestProbe()
-            val webget = TestProbe()
             val gather = TestProbe()
 
-            val webgetprop = Props(new Actor {
-                def receive = { case msg => webget.ref forward msg }
-            })
+            val (webget,webgetprop) = TestActor()
 
             val seedqueue = //system.actorOf(
-                testParent(SeedQueue.props(webgetprop, CFG(List("-n", "1"))))
-//                "TestSeedQueue2")
+                testParent(SeedQueue.props(webgetprop, CFG(List("-n", "1"))), testActor)
+            //                "TestSeedQueue2")
 
             val uri = new URI("http://example.org")
             queue.send(seedqueue, SeedQueueLink(gather.ref))
@@ -134,16 +118,14 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
         "run two requests" in {
 
             val queue = TestProbe()
-            val webget = TestProbe()
+//            val webget = TestProbe()
             val gather = TestProbe()
 
-            val webgetprop = Props(new Actor {
-                def receive = { case msg => webget.ref forward msg }
-            })
-
-            val seedqueue = //system.actorOf(
-                testParent(SeedQueue.props(webgetprop, cfg))
-               // "TestSeedQueue3")
+            val (webget, webgetprop) = TestActor()
+            
+            val seedqueue = 
+                testParent(SeedQueue.props(webgetprop, cfg), testActor, "TestSeedQueue3")
+            
 
             val uri = new URI("http://example.org")
             queue.send(seedqueue, SeedQueueLink(gather.ref))
@@ -179,16 +161,13 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
         "run two request" in {
 
             val queue = TestProbe()
-            val webget = TestProbe()
             val gather = TestProbe()
 
-            val webgetprop = Props(new Actor {
-                def receive = { case msg => webget.ref forward msg }
-            })
+            val (webget,webgetprop) = TestActor()
 
             val seedqueue = //system.actorOf(
-                testParent(SeedQueue.props(webgetprop, cfg))//,
-                //"TestSeedQueue2_1")
+                testParent(SeedQueue.props(webgetprop, cfg),testActor,"TestSeedQueue2_1")
+                
             queue.send(seedqueue, SeedQueueLink(gather.ref))
 
             queue.send(seedqueue, SeedQueueRequest(uri(1)))
@@ -215,16 +194,12 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
         "queued a request" in {
 
             val queue = TestProbe()
-            val webget = TestProbe()
             val gather = TestProbe()
 
-            val webgetprop = Props(new Actor {
-                def receive = { case msg => webget.ref forward msg }
-            })
+            val (webget,webgetprop) = TestActor()
 
             val seedqueue = //system.actorOf(
-                testParent(SeedQueue.props(webgetprop, CFG(List("-n", "1"))))//,
-                //"TestSeedQueue2_2")
+                testParent(SeedQueue.props(webgetprop, CFG(List("-n", "1"))),testActor,"TestSeedQueue2_2")
             queue.send(seedqueue, SeedQueueLink(gather.ref))
 
             queue.send(seedqueue, SeedQueueRequest(uri(1)))
@@ -256,16 +231,13 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
 
         "run four requests" in {
             val queue = TestProbe()
-            val webget = TestProbe()
             val gather = TestProbe()
 
-            val webgetprop = Props(new Actor {
-                def receive = { case msg => webget.ref forward msg }
-            })
+            val (webget,webgetprop) = TestActor()
 
-            val seedqueue = //system.actorOf(
-                testParent(SeedQueue.props(webgetprop, cfg))//,
-                //"TestSeedQueue2_3")
+            val seedqueue = 
+                testParent(SeedQueue.props(webgetprop, cfg), testActor, "TestSeedQueue2_3")
+                
             queue.send(seedqueue, SeedQueueLink(gather.ref))
 
             queue.send(seedqueue, SeedQueueRequest(uri(1)))
