@@ -19,7 +19,7 @@ class TestStorage extends TestKit(ActorSystem("TestStorage"))
         system.shutdown()
     }
 
-    val cfg = CFG(List("-limit","99","",""))
+    val cfg = CFG(limit=99)
 
     "A storage" should {
         "save a page" in {

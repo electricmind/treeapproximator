@@ -18,7 +18,7 @@ import ru.wordmetrix.vector.Vector
 // TODO: try paint all clusters into different tinge.
 
 object Draw2DMap extends SimpleSwingApplication {
-    implicit val cfg = CFG(List("-d"))
+    implicit val cfg = CFG(isdebug=true)
     val colors = Iterator.iterate(List(
         Color.red, Color.orange, Color.yellow,
         Color.green, Color.blue, Color.magenta))({

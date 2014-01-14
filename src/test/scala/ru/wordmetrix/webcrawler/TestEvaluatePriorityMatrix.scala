@@ -27,7 +27,7 @@ with Tools
     import Storage._
     import SampleHierarchy2Priority._
 
-    val cfg = CFG(List("-d", "-ts", "2", "-tl", "0.005"))
+    val cfg = CFG(isdebug=true, targets=2, targeting = 0.005)
    
     "A queue" should {
         "init a process" in {

@@ -8,96 +8,75 @@ import java.net.URI
  * CFG: Object that holds a set of the parameters of current session.
  */
 
-object CFG {
+object CFGParse {
     val rkey = """-(.+)""".r
 
-    val default = Map(
-        "path" -> new File("/tmp/webcrawler"),
-        "isdebug" -> false,
-        "ish2p" -> false,
-        "servers" -> 2,
-        "targets" -> 9,
-        "targeting" -> 0.01,
-        "sampling" -> new File("sampling.lst"),
-        "sigma" -> 1.0,
-        "limit" -> 1000,
-        "cache" -> new File("/tmp/webgetcache")
-    )
+    def apply(args: Array[String]): CFG = apply(args.toList)
 
-    def apply(): CFG = this(List())
-
-    def apply(args: Array[String]): CFG = CFG(args.toList)
-
-    def apply(list: List[String], map: Map[String, Any] = default,
+    def apply(list: List[String], cfg : CFG = CFG(),
               seeds: List[URI] = List()): CFG = list match {
+        
         case rkey("h") :: list =>
-            for ((key, value) <- map) {
-                println(" -%s = %s".format(key, value))
-            }
+            println(cfg)
             scala.sys.exit
-            CFG(list, map, seeds)
-        case rkey("p") :: path :: list =>
-            CFG(list, map + ("path" -> new File(path)), seeds)
+            apply(list, cfg, seeds)
+            
+        case rkey("path") :: path :: list =>
+            apply(list, cfg.copy(path = new File(path)), seeds)
 
         case rkey("d") :: list =>
-            CFG(list, map + ("isdebug" -> true), seeds)
+            apply(list, cfg.copy(isdebug = true), seeds)
 
         case rkey("ish2p") :: list =>
-            CFG(list, map + ("ish2p" -> true), seeds)
+            apply(list, cfg.copy(ish2p = true), seeds)
 
-        case rkey("n") :: value :: list =>
-            CFG(list, map + ("servers" -> value.toInt), seeds)
+        case rkey("servers") :: value :: list =>
+            apply(list, cfg.copy(servers = value.toInt), seeds)
 
-        case rkey("tl") :: value :: list =>
-            CFG(list, map + ("targeting" -> value.toDouble), seeds)
+        case rkey("targeting") :: value :: list =>
+            apply(list, cfg.copy(targeting = value.toDouble), seeds)
 
-        case rkey("ts") :: value :: list =>
-            CFG(list, map + ("targets" -> value.toInt), seeds)
+        case rkey("targets") :: value :: list =>
+            apply(list, cfg.copy(targets = value.toInt), seeds)
 
-        case rkey("ps") :: path :: list =>
-            CFG(list, map + ("samping" -> new File(path)), seeds)
+        case rkey("sampling") :: path :: list =>
+            apply(list, cfg.copy(sampling = new File(path)), seeds)
 
         case rkey("sigma") :: value :: list =>
-            CFG(list, map + ("sigma" -> value.toDouble), seeds)
+            apply(list, cfg.copy(sigma = value.toDouble), seeds)
 
         case rkey("limit") :: value :: list =>
-            CFG(list, map + ("limit" -> value.toInt), seeds)
+            apply(list, cfg.copy(limit = value.toInt), seeds)
 
-        case rkey("cache") :: value :: list =>
-            CFG(list, map + ("cache" -> new File(value)), seeds)
+        case rkey("cache") :: path :: list =>
+            apply(list, cfg.copy(cache = new File(path)), seeds)
 
         case rkey(x) :: list => {
             println("Unknown key %s".format(x))
-            CFG(list, map, seeds)
+            apply(list, cfg, seeds)
         }
 
         case seed :: list =>
-            CFG(list, map, new URI(seed) :: seeds)
+            apply(list, cfg, new URI(seed) :: seeds)
 
-        case List() => new CFG(
-            map("path").asInstanceOf[File],
-            map("sampling").asInstanceOf[File] match {
+          
+        case List() => cfg.copy(
+            sampling = cfg.sampling match {
                 case x if x.isAbsolute => x
-                case x                 => new File(map("path").asInstanceOf[File], x.getPath)
+                case x                 => new File(cfg.path, x.getPath)
             },
-            map("isdebug").asInstanceOf[Boolean],
-            map("ish2p").asInstanceOf[Boolean],
-            map("servers").asInstanceOf[Int],
-            map("targeting").asInstanceOf[Double],
-            map("targets").asInstanceOf[Int],
-            map("sigma").asInstanceOf[Double],
-            map("limit").asInstanceOf[Int],
-            map("cache").asInstanceOf[File],
-            seeds.reverse)
+            seeds = cfg.seeds.reverse)
     }
 }
 /*
  *[04:02] Lynne: a tin of striped paint
+ * 
 */
-class CFG(val path: File, val sampling: File, val isdebug: Boolean,
-          val ish2p: Boolean, val servers: Int,
-          val targeting: Double, val targets: Int,
-          val sigma: Double, val limit: Int, val cache: File, val seeds: List[URI]) {}
+case class CFG(val path: File = new File("/tmp/webcrawler"), val sampling: File = new File("sampling.lst"), val isdebug: Boolean = false,
+          val ish2p: Boolean = false, val servers: Int = 2,
+          val targeting: Double = 0.01, val targets: Int = 9,
+          val sigma: Double = 1.0, val limit: Int = 100, val cache: File = new File("/tmp/webgetcache"), val seeds: List[URI] = List()) {}
+
 
 object debug {
     def apply(format: String, p: Any*)(implicit cfg: CFG) = {

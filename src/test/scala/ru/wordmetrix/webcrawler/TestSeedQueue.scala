@@ -27,13 +27,13 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
     val cfg = CFG()
 
     "A single-item seedqueue" should {
-        val cfg = CFG(List("-n", "1"))
+        val cfg = CFG(servers = 1)
         "run one request" in {
 
             val queue = TestProbe()
             val gather = TestProbe()
 
-            val (webget,webgetprop) = TestActor()
+            val (webget, webgetprop) = TestActor()
 
             val seedqueue = testParent(
                 SeedQueue.props(webgetprop, cfg), testActor,
@@ -89,11 +89,11 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
             val queue = TestProbe()
             val gather = TestProbe()
 
-            val (webget,webgetprop) = TestActor()
+            val (webget, webgetprop) = TestActor()
 
             val seedqueue = //system.actorOf(
-                testParent(SeedQueue.props(webgetprop, CFG(List("-n", "1"))), testActor)
-            //                "TestSeedQueue2")
+                testParent(SeedQueue.props(webgetprop, CFG(servers = 1)),
+                    testActor, "TestSeedQueue2")
 
             val uri = new URI("http://example.org")
             queue.send(seedqueue, SeedQueueLink(gather.ref))
@@ -118,14 +118,13 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
         "run two requests" in {
 
             val queue = TestProbe()
-//            val webget = TestProbe()
+            //            val webget = TestProbe()
             val gather = TestProbe()
 
             val (webget, webgetprop) = TestActor()
-            
-            val seedqueue = 
+
+            val seedqueue =
                 testParent(SeedQueue.props(webgetprop, cfg), testActor, "TestSeedQueue3")
-            
 
             val uri = new URI("http://example.org")
             queue.send(seedqueue, SeedQueueLink(gather.ref))
@@ -154,7 +153,7 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
     }
 
     "A two-items seedqueue" should {
-        val cfg = CFG(List("-n", "2"))
+        val cfg = CFG(servers = 2)
 
         def uri(n: Int = 0): URI = new URI(s"http://example.org/${n}")
 
@@ -163,11 +162,11 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
             val queue = TestProbe()
             val gather = TestProbe()
 
-            val (webget,webgetprop) = TestActor()
+            val (webget, webgetprop) = TestActor()
 
             val seedqueue = //system.actorOf(
-                testParent(SeedQueue.props(webgetprop, cfg),testActor,"TestSeedQueue2_1")
-                
+                testParent(SeedQueue.props(webgetprop, cfg), testActor, "TestSeedQueue2_1")
+
             queue.send(seedqueue, SeedQueueLink(gather.ref))
 
             queue.send(seedqueue, SeedQueueRequest(uri(1)))
@@ -196,10 +195,10 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
             val queue = TestProbe()
             val gather = TestProbe()
 
-            val (webget,webgetprop) = TestActor()
+            val (webget, webgetprop) = TestActor()
 
             val seedqueue = //system.actorOf(
-                testParent(SeedQueue.props(webgetprop, CFG(List("-n", "1"))),testActor,"TestSeedQueue2_2")
+                testParent(SeedQueue.props(webgetprop, CFG(servers = 1)), testActor, "TestSeedQueue2_2")
             queue.send(seedqueue, SeedQueueLink(gather.ref))
 
             queue.send(seedqueue, SeedQueueRequest(uri(1)))
@@ -233,11 +232,11 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
             val queue = TestProbe()
             val gather = TestProbe()
 
-            val (webget,webgetprop) = TestActor()
+            val (webget, webgetprop) = TestActor()
 
-            val seedqueue = 
+            val seedqueue =
                 testParent(SeedQueue.props(webgetprop, cfg), testActor, "TestSeedQueue2_3")
-                
+
             queue.send(seedqueue, SeedQueueLink(gather.ref))
 
             queue.send(seedqueue, SeedQueueRequest(uri(1)))
