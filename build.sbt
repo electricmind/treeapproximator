@@ -11,7 +11,7 @@ libraryDependencies += "org.scala-lang" % "scala-swing" % "2.10.2"
 
 //libraryDependencies += "org.scala-lang" % "scala-actors" % "2.10.2"
 
-//libraryDependencies += "org.scalaz" % "scalaz-core_2.10" % "7.0.5"
+libraryDependencies += "org.scalaz" % "scalaz-core_2.10" % "7.0.5"
 
 libraryDependencies +=  "com.typesafe.akka" %% "akka-actor" % "2.2.3"
 
