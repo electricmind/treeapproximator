@@ -57,7 +57,7 @@ object CFGParse {
         }
 
         case seed :: list =>
-            apply(list, cfg, new URI(seed) :: seeds)
+           apply(list, cfg.copy( seeds = new URI(seed) :: seeds))
 
           
         case List() => cfg.copy(
