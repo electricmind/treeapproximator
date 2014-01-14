@@ -1,7 +1,6 @@
 package ru.wordmetrix.utils
 
-import java.io.File
-import scala.actors.Actor
+import java.io.File 
 
 import java.net.URI
 /*
@@ -68,7 +67,7 @@ object CFGParse {
             seeds = cfg.seeds.reverse)
     }
 }
-/*
+/* 
  *[04:02] Lynne: a tin of striped paint
  * 
 */
