@@ -1,6 +1,5 @@
 package ru.wordmetrix.webcrawler
 
-
 import java.net.URI
 import scala.concurrent.duration.DurationInt
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
@@ -24,8 +23,8 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
 
     import Gather._
     val cfg = CFG()
-    
-    "An gather" should {
+
+    "A gather" should {
 
         "parse a page" in {
             val queue = TestProbe()
@@ -35,19 +34,23 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             val gather = testParent(
                 Gather.props(cfg),
                 testActor,
-                "Gather_parses_a_page")
+                "Gather_1")
 
             queue.send(gather, GatherLink(storage.ref, sample.ref))
             queue.send(gather, GatherPage(uri(1), xml(1).toString))
 
             within(400 milliseconds) {
+                // Return links
                 expectMsg(GatherSeeds(
                     uri(1),
                     Set(uri(1), uri(2), uri(3)),
                     Vector("test" -> 15.0))
                 )
-                storage.expectMsg(GatherIntel(uri(1), "== html=="))
 
+                // Return text
+                storage.expectMsg(GatherIntel(uri(1), text(1)))
+
+                // Return link context
                 sample.expectMsg(GatherLinkContext(
                     uri(1),
                     Map(uri(1) ->
@@ -68,6 +71,45 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             }
         }
 
+        "elicit a LinkContext from a complicate page" in {
+            val queue = TestProbe()
+            val storage = TestProbe()
+            val sample = TestProbe()
+
+            val gather = testParent(
+                Gather.props(cfg),
+                testActor,
+                "Gather_2")
+
+            val xml = <html><head><title>It's about a test</title></head><body>
+                                                                             <h1><a href={ uri(1).toString } shape="rect">Test of Gather Class</a></h1>
+                                                                             <p><a href={ uri(2).toString } shape="rect">Gather!</a></p>
+                                                                         </body></html>
+
+            queue.send(gather, GatherLink(storage.ref, sample.ref))
+            queue.send(gather, GatherPage(uri(1), xml.toString))
+
+            // Return link context
+            sample.expectMsg(GatherLinkContext(
+                uri(1),
+                Map(uri(1) ->
+                    Vector(
+                        new FeatureName("a") -> 1.0,
+                        new FeatureName("body") -> 1.0,
+                        new FeatureName("h1") -> 1.0
+                    ),
+                    uri(2) -> Vector(
+                        new FeatureName("a") -> 1.0,
+                        new FeatureName("body") -> 1.0,
+                        new FeatureName("p") -> 1.0
+                    )
+                )
+            ))
+
+            storage.expectMsgClass(classOf[GatherIntel[String]])
+            expectMsgClass(classOf[GatherSeeds])
+        }
+
         "remove links if repeat" in {
             val queue = TestProbe()
             val storage = TestProbe()
@@ -75,7 +117,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
 
             val gather = testParent(
                 Gather.props(cfg), testActor,
-                "Gather_parses_a_page")
+                "Gather_3")
 
             queue.send(gather, GatherLink(storage.ref, sample.ref))
             queue.send(gather, GatherPage(uri(1), xml(1).toString))
@@ -85,7 +127,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 Set(uri(1), uri(2), uri(3)),
                 Vector("test" -> 15.0))
             )
-            storage.expectMsg(GatherIntel(uri(1), "== html=="))
+            storage.expectMsg(GatherIntel(uri(1), text(1)))
 
             sample.expectMsg(GatherLinkContext(
                 uri(1),
@@ -112,7 +154,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 Vector("test" -> 15.0))
             )
 
-            storage.expectMsg(GatherIntel(uri(2), "== html=="))
+            storage.expectMsg(GatherIntel(uri(2), text(1)))
 
             sample.expectMsg(GatherLinkContext(
                 uri(2),
@@ -139,8 +181,8 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             val sample = TestProbe()
 
             val gather = testParent(
-                Gather.props(cfg),testActor,
-                "Gather_parses_a_page")
+                Gather.props(cfg), testActor,
+                "Gather_4")
 
             queue.send(gather, GatherLink(storage.ref, sample.ref))
             queue.send(gather, GatherPage(uri(1),
@@ -153,32 +195,24 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                     toString
             ))
 
-            within(400 milliseconds) {
-                expectMsg(GatherSeeds(
-                    uri(1),
-                    Set(uri(1)),
-                    Vector())
-                )
-                storage.expectMsg(GatherIntel(uri(1), "== html=="))
-
-                sample.expectMsg(GatherLinkContext(
-                    uri(1),
-                    Map(uri(1) ->
-                        Vector(
-                            new FeatureName("a") -> 1.0,
-                            new FeatureName("body") -> 1.0
-                        )
+            expectMsg(GatherSeeds(
+                uri(1),
+                Set(uri(1)),
+                Vector())
+            )
+            storage.expectMsgClass(classOf[GatherIntel[String]])
+            
+            sample.expectMsg(GatherLinkContext(
+                uri(1),
+                Map(uri(1) ->
+                    Vector(
+                        new FeatureName("a") -> 1.0,
+                        new FeatureName("body") -> 1.0
                     )
                 )
-                )
-            }
-        }
-
-    }
-
-    "A gather method" should {
-        "parse xml" in {
-            //gather.page2xml_whole(xml.toString) should be(xml)
+            ))
         }
     }
 }
+
+
