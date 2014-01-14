@@ -35,12 +35,13 @@ class TestWebGet extends TestKit(ActorSystem("TestKitUsageSpec"))
 
             watch(webget)
             
-            seedqueue.send(webget, WebGetRequest(uri(0), gather.ref))
+            val uri = new URI("http://example.org/")
+            seedqueue.send(webget, WebGetRequest(uri , gather.ref))
             seedqueue.expectMsg(SeedQueueGet)
             seedqueue.send(webget, SeedQueueEmpty)
 
             gather.expectMsgPF() {
-                case msg @ GatherPage(u, _) if u == uri(0) => msg
+                case msg @ GatherPage(u, _) if u == uri => msg
             }
 
             expectTerminated(webget)
