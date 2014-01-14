@@ -75,7 +75,7 @@ object CFGParse {
 case class CFG(val path: File = new File("/tmp/webcrawler"), val sampling: File = new File("sampling.lst"), val isdebug: Boolean = false,
           val ish2p: Boolean = false, val servers: Int = 2,
           val targeting: Double = 0.01, val targets: Int = 9,
-          val sigma: Double = 1.0, val limit: Int = 100, val cache: File = new File("/tmp/webgetcache"), val seeds: List[URI] = List()) {}
+          val sigma: Double = 1.0, val limit: Int = 1000, val cache: File = new File("/tmp/webgetcache"), val seeds: List[URI] = List()) {}
 
 
 object debug {
