@@ -90,7 +90,7 @@ with Tools
             gather.send(queue, GatherSeeds(uri(5), Set(uri(6), uri(7)), Vector("test" -> 2.0, "test5" -> 1.0)))
 
             storage.expectMsg(StorageSign(uri(5)))
-
+  
             // Estimation phase
             gather.send(queue, GatherSeeds(uri(6), Set(uri(6), uri(7)), Vector("test" -> 2.0, "test6" -> 0.5)))
 
