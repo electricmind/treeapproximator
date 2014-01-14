@@ -40,7 +40,7 @@ class TestStorage extends TestKit(ActorSystem("TestStorage"))
     }
    
    
-   "A storage" should {
+/*   "A storage" should {
         "send kill message" in {
             val queue = TestProbe()
             val gather = TestProbe()
@@ -60,9 +60,8 @@ class TestStorage extends TestKit(ActorSystem("TestStorage"))
             
             queue.send(storage, StorageSign(uri(1)))
             expectTerminated(seedqueue.ref)
-            //seedqueue.expectMsg(PoisonPill)
             
         }
-    }
+    }*/
 
 }
