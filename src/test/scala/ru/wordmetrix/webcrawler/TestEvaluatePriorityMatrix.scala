@@ -61,7 +61,7 @@ with Tools
             seedqueue.expectMsgPF()(checkuri(1))
 
             // Targeting phase
-            gather.send(queue, GatherSeeds(uri(1), Set(uri(2), uri(3), uri(4), uri(5), uri(6), uri(7)), Vector("test" -> 2.0)))
+            gather.send(queue, GatherSeeds(uri(1), Set(uri(2), uri(3), uri(4), uri(5), uri(6), uri(7),uri(8)), Vector("test" -> 2.0)))
 
             seedqueue.expectMsgPF()(checkuri(2))
 
@@ -76,7 +76,7 @@ with Tools
             seedqueue.expectMsgPF()(checkuri(7))
 
             storage.expectMsg(StorageSign(uri(1)))
-
+println("sent uri2")
             gather.send(queue, GatherSeeds(uri(2), Set(uri(4), uri(5)), Vector("test" -> 2.0, "test2" -> 4.0)))
 
             storage.expectMsg(StorageSign(uri(2)))
@@ -85,18 +85,27 @@ with Tools
 
             storage.expectMsg(StorageSign(uri(3)))
 
-            gather.send(queue, GatherSeeds(uri(4), Set(uri(4), uri(5)), Vector("test" -> 2.0, "test4" -> 2.0)))
+println("sent uri4")
+gather.send(queue, GatherSeeds(uri(4), Set(uri(4), uri(5)), Vector("test" -> 2.0, "test4" -> 2.0)))
+
+println("sent uri5")
 
             gather.send(queue, GatherSeeds(uri(5), Set(uri(6), uri(7)), Vector("test" -> 2.0, "test5" -> 1.0)))
 
             storage.expectMsg(StorageSign(uri(5)))
+
+            println("sent uri6")
   
             // Estimation phase
             gather.send(queue, GatherSeeds(uri(6), Set(uri(6), uri(7)), Vector("test" -> 2.0, "test6" -> 0.5)))
 
             gather.send(queue, GatherSeeds(uri(7), Set(uri(6), uri(7)), Vector("test" -> 2.0, "test7" -> 0.25)))
 
-            seedqueue.expectMsg(SeedQueueAvailable)
+            seedqueue.expectMsg(SeedQueueRequest(uri(8)))
+            
+            // TODO: I need an available test, it is a specific case when targeting phase is completed but there are no links to continue after targeting phase
+            
+            //seedqueue.expectMsg(SeedQueueAvailable)
             //sample.expectMsg(1)
         }
         
@@ -108,7 +117,7 @@ with Tools
 
             val queue = system.actorOf(
                 EvaluatePriorityMatrix.props(storageprop, gatherprop, seedqueueprop, sampleprop, cfg),
-                "TestEvaluatePriority_1")
+                "TestEvaluatePriority_2")
 
             def checkuri(n: Int): PartialFunction[Any, Unit] = {
                 val u = uri(n)
