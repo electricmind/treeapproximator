@@ -9,6 +9,7 @@ object SortedMapPQ {
     SortedMap(1 -> 2)                             //> res0: scala.collection.SortedMap[Int,Int] = Map(1 -> 2)
 
     object PQ {
+    
         def apply[U]()(implicit o: Ordering[U]) = SortedMap[U, U]()
         def apply[U](i1: U)(implicit o: Ordering[U]) = SortedMap[U, U](i1 -> i1)
         def apply[U](x1: U, x2: U, xs: U*)(implicit o: Ordering[U]) =
