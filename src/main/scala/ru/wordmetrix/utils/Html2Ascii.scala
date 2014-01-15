@@ -104,7 +104,9 @@ class Html2Ascii(page: scala.xml.NodeSeq) {
             case xml.Elem(_, label, _, _, nodes @ _*) =>
                 "== " + label + "==\n" + dump(nodes) + "\n"
 
-            case x => println("??", x.label, x); ""
+            case x => 
+                 println("Html2Ascii unknown: %s %s", x.label, x); 
+                 ""
         }) mkString
     }
 
