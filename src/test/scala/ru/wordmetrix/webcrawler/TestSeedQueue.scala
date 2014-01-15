@@ -1,6 +1,7 @@
 package ru.wordmetrix.webcrawler
 
 import java.net.URI
+
 import scala.concurrent.duration.DurationInt
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 import Gather.{ GatherIntel, GatherLinkContext, GatherPage, GatherSeeds }
@@ -11,6 +12,7 @@ import ru.wordmetrix.vector.Vector
 import ru.wordmetrix.webcrawler.LinkContext.FeatureName
 import akka.actor.Props
 import akka.actor.Actor
+import EvaluatePriorityMatrix._
 
 class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
         with Tools
@@ -176,9 +178,10 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
 
             //TODO: Strange behavior here, sometimes requests come miss ordered
 
-            webget.expectMsg(WebGetRequest(uri(1), gather.ref))
-
-            webget.expectMsg(WebGetRequest(uri(2), gather.ref))
+            webget.expectSet(
+                    WebGetRequest(uri(1), gather.ref),
+                    WebGetRequest(uri(2), gather.ref)
+            )
 
             webget.send(seedqueue, SeedQueueGet)
 
@@ -247,9 +250,10 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
 
             queue.send(seedqueue, SeedQueueRequest(uri(2)))
 
-            webget.expectMsg(WebGetRequest(uri(1), gather.ref))
-
-            webget.expectMsg(WebGetRequest(uri(2), gather.ref))
+            webget.expectSet(
+                    WebGetRequest(uri(1), gather.ref),
+                    WebGetRequest(uri(2), gather.ref)
+            )
 
             webget.send(seedqueue, SeedQueueGet)
 
@@ -269,9 +273,10 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
 
             queue.send(seedqueue, SeedQueueRequest(uri(4)))
 
-            webget.expectMsg(WebGetRequest(uri(3), gather.ref))
-
-            webget.expectMsg(WebGetRequest(uri(4), gather.ref))
+            webget.expectSet(
+                    WebGetRequest(uri(3), gather.ref),
+                    WebGetRequest(uri(4), gather.ref)
+            )
 
             webget.send(seedqueue, SeedQueueGet)
 
@@ -285,5 +290,42 @@ class TestSeedQueue extends TestKit(ActorSystem("TestSeedQueue"))
 
             expectMsg(SeedQueueGet)
         }
+
+        "propagate targeting" in {
+
+            val queue = TestProbe()
+            val gather = TestProbe()
+
+            val (webget, webgetprop) = TestActor()
+
+            val seedqueue = testParent(
+                SeedQueue.props(webgetprop, cfg), testActor, "TestSeedQueue2_4")
+
+            queue.send(seedqueue, SeedQueueLink(gather.ref))
+
+            queue.send(seedqueue, SeedQueueRequest(uri(1)))
+
+            queue.send(seedqueue, SeedQueueRequest(uri(2)))
+
+            queue.send(seedqueue, EvaluatePriorityMatrixStopTargeting)
+            
+            webget.expectSet(
+                    WebGetRequest(uri(1), gather.ref),
+                    WebGetRequest(uri(2), gather.ref)
+            )
+
+            webget.send(seedqueue, SeedQueueGet)
+
+            webget.expectMsg(SeedQueueEmpty)
+
+            webget.send(seedqueue, SeedQueueGet)
+
+            webget.expectMsg(SeedQueueEmpty)
+
+            expectMsg(SeedQueueGet)
+
+            gather.expectMsg(EvaluatePriorityMatrixStopTargeting)
+        }
+
     }
 }

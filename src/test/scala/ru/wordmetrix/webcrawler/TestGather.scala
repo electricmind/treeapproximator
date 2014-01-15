@@ -1,6 +1,7 @@
 package ru.wordmetrix.webcrawler
 
 import java.net.URI
+
 import scala.concurrent.duration.DurationInt
 import org.scalatest.{ BeforeAndAfterAll, Matchers, WordSpecLike }
 import Gather.{ GatherIntel, GatherLinkContext, GatherPage, GatherSeeds }
@@ -11,6 +12,7 @@ import ru.wordmetrix.vector.Vector
 import ru.wordmetrix.webcrawler.LinkContext.FeatureName
 import akka.actor.Props
 import akka.actor.Actor
+import EvaluatePriorityMatrix._
 
 class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
         with Tools
@@ -23,6 +25,23 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
 
     import Gather._
     val cfg = CFG()
+
+    def linkcontext(n: Int) = GatherLinkContext(
+        uri(n),
+        Map(uri(n) ->
+            Vector(
+                new FeatureName("a") -> 1.0,
+                new FeatureName("body") -> 1.0
+            ),
+            uri(n + 1) -> Vector(
+                new FeatureName("a") -> 1.0,
+                new FeatureName("body") -> 1.0
+            ),
+            uri(n + 2) -> Vector(
+                new FeatureName("a") -> 1.0,
+                new FeatureName("body") -> 1.0)
+        )
+    )
 
     "A gather" should {
 
@@ -51,24 +70,38 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 storage.expectMsg(GatherIntel(uri(1), text(1)))
 
                 // Return link context
-                sample.expectMsg(GatherLinkContext(
-                    uri(1),
-                    Map(uri(1) ->
-                        Vector(
-                            new FeatureName("a") -> 1.0,
-                            new FeatureName("body") -> 1.0
-                        ),
-                        uri(2) -> Vector(
-                            new FeatureName("a") -> 1.0,
-                            new FeatureName("body") -> 1.0
-                        ),
-                        uri(3) -> Vector(
-                            new FeatureName("a") -> 1.0,
-                            new FeatureName("body") -> 1.0)
-                    )
-                )
-                )
+                sample.expectMsg(linkcontext(1))
             }
+        }
+
+        "propagate stoptargeting" in {
+            val queue = TestProbe()
+            val storage = TestProbe()
+            val sample = TestProbe()
+
+            val gather = testParent(
+                Gather.props(cfg),
+                testActor,
+                "Gather_1")
+
+            queue.send(gather, GatherLink(storage.ref, sample.ref))
+            queue.send(gather, GatherPage(uri(1), xml(1).toString))
+            queue.send(gather, EvaluatePriorityMatrixStopTargeting)
+
+                expectMsg(GatherSeeds(
+                    uri(1),
+                    Set(uri(1), uri(2), uri(3)),
+                    Vector("test" -> 15.0))
+                )
+
+                // Return text
+                storage.expectMsg(GatherIntel(uri(1), text(1)))
+
+                // Return link context
+                sample.expectMsg(linkcontext(1))
+                
+                expectMsg(EvaluatePriorityMatrixStopTargeting)
+
         }
 
         "elicit a LinkContext from a complicate page" in {
@@ -201,7 +234,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 Vector())
             )
             storage.expectMsgClass(classOf[GatherIntel[String]])
-            
+
             sample.expectMsg(GatherLinkContext(
                 uri(1),
                 Map(uri(1) ->

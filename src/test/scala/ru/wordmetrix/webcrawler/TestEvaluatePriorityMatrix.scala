@@ -99,5 +99,61 @@ with Tools
             seedqueue.expectMsg(SeedQueueAvailable)
             //sample.expectMsg(1)
         }
+        
+        "stop targeting phase if failed" in {
+            val (storage, storageprop) = TestActor()
+            val (gather, gatherprop) = TestActor()
+            val (seedqueue, seedqueueprop) = TestActor()
+            val (sample, sampleprop) = TestActor()
+
+            val queue = system.actorOf(
+                EvaluatePriorityMatrix.props(storageprop, gatherprop, seedqueueprop, sampleprop, cfg),
+                "TestEvaluatePriority_1")
+
+            def checkuri(n: Int): PartialFunction[Any, Unit] = {
+                val u = uri(n)
+
+                {
+                    case (SeedQueueRequest(`u`)) =>
+                }
+            }
+
+            // Initial seed is sent     
+            queue ! EvaluatePriorityMatrixSeed(uri(1))
+            
+            storage.expectMsgClass(classOf[StorageVictim])
+
+            gather.expectMsgClass(classOf[GatherLink])
+            
+            // Initial phase
+            seedqueue.expectMsgClass(classOf[SeedQueueLink])
+            
+            seedqueue.expectMsgPF()(checkuri(1))
+
+            // Targeting phase
+            watch(queue)
+            
+            gather.send(queue, GatherSeeds(uri(1), Set(uri(2), uri(3), uri(4), uri(5), uri(6), uri(7)), Vector("test" -> 2.0)))
+
+            seedqueue.expectMsgPF()(checkuri(2))
+
+            seedqueue.expectMsgPF()(checkuri(3))
+
+            seedqueue.expectMsgPF()(checkuri(4))
+
+            seedqueue.expectMsgPF()(checkuri(5))
+
+            seedqueue.expectMsgPF()(checkuri(6))
+
+            seedqueue.expectMsgPF()(checkuri(7))
+            
+            seedqueue.expectMsg(EvaluatePriorityMatrixStopTargeting)
+
+            gather.send(queue,EvaluatePriorityMatrixStopTargeting)
+            
+            expectTerminated(queue)
+            
+        }
+
     }
 }
