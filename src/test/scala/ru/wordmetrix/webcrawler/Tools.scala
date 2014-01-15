@@ -7,8 +7,9 @@ import akka.actor.Actor
 import akka.testkit.TestProbe
 import akka.actor.ActorRef
 import ru.wordmetrix.utils.Html2Ascii
+import org.scalatest.Matchers
 
-trait Tools {
+trait Tools extends Matchers {
     def uri(n: Int = 0) = new URI(s"http://example.org/${n}")
 
     def xml(n: Int) = <html><body>
@@ -42,5 +43,17 @@ trait Tools {
                 case x                    => child forward x
             }
         }))
+        
+    implicit class ExpectEx(probe: TestProbe) {
+        def expectSet[U](msgs: U*) = {
+            val collected = (1 to msgs.size).foldLeft(Set[U]()) {
+                case (set, n) => probe.expectMsgPF() {
+                    case x: U => set + x
+                }
+            }
+
+            collected should be(msgs.toSet)
+        }
+    }
 
 }
