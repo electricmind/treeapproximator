@@ -14,7 +14,13 @@ import ru.wordmetrix.utils.Use.anyToUse
 import ru.wordmetrix.utils.debug
 import ru.wordmetrix.vector.Vector
 import ru.wordmetrix.utils.CFGParse
-
+/**
+ *  ArrangeText is a strategy that places a bunch of text in convenient fashion.
+ *  
+ *  It provides three predefined approaches of saving text: a tree of text 
+ *  arranged by similarity, a set of clusters placed into folders and a web-
+ *  page of links on web pages (assuming that an original URI is available).
+ */
 object ArrangeText extends App {
     implicit lazy val cfg = CFG(isdebug = true)
     type Word = Int
