@@ -1,13 +1,11 @@
 package ru.wordmetrix.treeapproximator
 
 import java.io.File
-
 import scala.Array.canBuildFrom
 import scala.Option.option2Iterable
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.util.Random
 import scala.xml.{ Text, Unparsed }
-
 import ru.wordmetrix.smartfile.SmartFile.{ fromFile, fromString, toFile }
 import ru.wordmetrix.treeapproximator.TreeApproximator.{ Leaf, Node, Tree }
 import ru.wordmetrix.utils.CFG
@@ -15,6 +13,7 @@ import ru.wordmetrix.utils.Use.anyToUse
 import ru.wordmetrix.utils.debug
 import ru.wordmetrix.vector.Vector
 import impl._
+import scala.util.matching.Regex
 
 /**
  *  ArrangeText is a strategy that places a bunch of text in convenient fashion.
@@ -45,6 +44,7 @@ object ArrangeText extends App {
         string2word.inverted
     }
     implicit def string2File(s: String) = new File(s)
+
     implicit def vectors2Vectors(v: Vector[Word]): Vector[String] = Vector(v.map {
         case (x, y) => (inverted.getOrElse(x, "unknown" /*"Word is unknown or index possibly is old"*/ ) -> y)
     } toList)
@@ -99,11 +99,22 @@ object ArrangeText extends App {
         }
     }
 
-    override def main(args: Array[String]) {
-        val delimiter = """\W+""".r
+    def splitter(ss: List[String],
+                 delimiter: Regex = """\W+""".r): List[(Int, Double)] =
+        for {
+            word <- ss.map(delimiter.split)
+            if word.length > 3
+            (x, ys) <- word.groupBy(x => x.toLowerCase())
+            y <- Some(ys.toList.length.toDouble)
+            if y > 5
+        } yield {
+            string2word(x) -> y
+        }
 
+    override def main(args: Array[String]) {
         val (command, target, files) = args match {
-            case Array(command, target, files @ _*) if Set("tree", "cluster", "links")(command) => (command, target, files)
+            case Array(command, target, files @ _*) if Set("tree", "cluster", "links")(command) =>
+                (command, target, files)
 
             case Array(target, files @ _*) => ("both", target, files)
 
@@ -113,21 +124,16 @@ object ArrangeText extends App {
         }
         root = target
 
-        def vectors = Random.shuffle(files).toIterator.map(x => new File(x)).map(x => try {
-            Some((Vector(
-                x.readLines().map(delimiter.split).flatten
-                    .toList.groupBy(x => x.toLowerCase())
-                    .map({ case (x, y) => (x, y.length.toDouble) })
-                    .filter(_._2 > 5)
-                    .filter(_._1.length > 3)
-                    .map({ case (x, y) => string2word(x) -> y })
-                    .toList), x)
+        def vectors = Random.shuffle(files).map(x => new File(x)).map(x => try {
+            Some(
+                (Vector(splitter(x.readLines().toList)), x)
             )
         } catch {
             case x: Throwable => println("File open failure: " + x); None
         }).flatten
 
         val t = System.currentTimeMillis()
+
         def tree = vectors.zipWithIndex.foldLeft(TreeApproximator[Word, File]())({
             case (tree, ((vector, file), n)) => {
                 debug.time("%s %d %s tree(%s).energy => %4.3f, length = %d / %d".format(
@@ -142,11 +148,10 @@ object ArrangeText extends App {
                     if (n % 100 == 0) System.gc()
                     (tree + (vector, file)).rectify(2)
                 }
-
             }
         })
 
-        def tree_opt = (1 to 5).foldLeft(tree /*.asInstanceOf[Node[Word, File]]*/ )({
+        def tree_opt = (1 to 5).foldLeft(tree)({
             case (tree, n) =>
                 debug.time("Rectifying #%3d = %4.3f %d".format(
                     n, tree.energy2, tree.average.size)
@@ -162,16 +167,19 @@ object ArrangeText extends App {
 
         command match {
             case "tree" => arrange_tree(tree_aligned, target)
+
             case "cluster" => tree_aligned use {
                 tree => arrange_cluster(debug.time("clustering") { Clusters(tree) }, tree, target)
             }
+
             case "links" => tree_aligned use {
                 tree =>
                     target / "index.html" write (
                         debug.time("clustering") { Clusters(tree) }
-                             .arrange_cluster_into_jquery_ui(tree.toMap, tree.average.normal, root.getParent().getName(), target).toString
+                        .arrange_cluster_into_jquery_ui(tree.toMap, tree.average.normal, root.getParent().getName(), target).toString
                     )
             }
+
             case "both" =>
                 tree_aligned use {
                     tree =>
