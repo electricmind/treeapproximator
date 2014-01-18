@@ -24,10 +24,9 @@ import ru.wordmetrix.utils._
  *  arranged by similarity, a set of clusters placed into folders and a web-
  *  page of links on web pages (assuming that an original URI is available).
  */
+
 object ArrangeText extends App {
-
      override def main(args: Array[String]) {
-
         val (command, args1) = args match {
             case Array(command, args @ _*) if Set("tree", "cluster", "links")(command) =>
                 (Some(command), args.toList)
@@ -39,7 +38,7 @@ object ArrangeText extends App {
                 (None, args.toList)
         }
 
-        implicit val cfg = CFG1(args1)
+        implicit val cfg = CFG(args1)
 
         lazy val arrangetext = ArrangeText()
 

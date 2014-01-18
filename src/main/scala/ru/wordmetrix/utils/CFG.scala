@@ -7,13 +7,16 @@ import java.net.URI
  * CFG: Object that holds a set of the parameters of current session.
  */
  
-object CFG1 {
+object CFG {
     val rkey = """-(.+)""".r
 
    // def apply(args: Array[String]): CFG = apply(args.toList)
 
-    def apply(list: List[String], cfg: CFG = CFG(),
-              seeds: List[URI] = List()): CFG = list match {
+    def apply(list: List[String]) : CFG = apply(list, CFG(), List())
+    
+    def apply(list: List[String], cfg: CFG, // = CFG(),
+              seeds: List[URI] // = List()
+              ): CFG = list match {
 
         case rkey("h") :: list =>
             println(cfg)
@@ -65,7 +68,7 @@ object CFG1 {
         }
 
         case arg :: list =>
-            apply(list, cfg.copy(args = arg :: cfg.args))
+            apply(list, cfg.copy(args = arg :: cfg.args), seeds)
 
         case List() => cfg.copy(
             sampling = cfg.sampling match {
