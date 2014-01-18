@@ -26,7 +26,7 @@ import ru.wordmetrix.utils._
  */
 
 object ArrangeText extends App {
-     override def main(args: Array[String]) {
+    override def main(args: Array[String]) {
         val (command, args1) = args match {
             case Array(command, args @ _*) if Set("tree", "cluster", "links")(command) =>
                 (Some(command), args.toList)
@@ -43,26 +43,23 @@ object ArrangeText extends App {
         lazy val arrangetext = ArrangeText()
 
         command foreach {
-            case "tree" => 
+            case "tree" =>
                 new ArrangeTextDumpTree(arrangetext).dump() //arrange_tree(tree_aligned, target)
 
-            case "cluster" => 
+            case "cluster" =>
                 new ArrangeTextDumpClusters(arrangetext).dump()
-            
 
-            case "links" => 
+            case "links" =>
                 new ArrangeTextDumpHTML(arrangetext).dump()
 
             case "all" =>
-                 println("tree.size = " + arrangetext.tree.size)
-                 new ArrangeTextDumpTree(arrangetext).dump() //arrange_tree(tree_aligned, target)
+                println("tree.size = " + arrangetext.tree.size)
+                new ArrangeTextDumpTree(arrangetext).dump() //arrange_tree(tree_aligned, target)
 
-                 println("cluster suze = " + arrangetext.clusters.size)
-                 new ArrangeTextDumpClusters(arrangetext).dump()
+                println("cluster suze = " + arrangetext.clusters.size)
+                new ArrangeTextDumpClusters(arrangetext).dump()
 
-                 println("links = " + arrangetext.clusters.size)
-
-                
+                println("links = " + arrangetext.clusters.size)
 
             case _ => println("Huh, boyz ...")
         }
@@ -72,7 +69,7 @@ object ArrangeText extends App {
 }
 
 abstract class ArrangeTextDump(arrangetree: ArrangeText)(implicit cfg: CFG) {
-    
+
     def vector2Title(v: Vector[String], n: Int = 5, stopword: Set[String] = Set(" ")) = {
         v.toList.sortBy(-_._2).takeWhile(_._2 > 0d).map(_._1).filterNot(stopword).filterNot(Set(" ", "")).take(n).mkString(" ")
     }
@@ -80,7 +77,7 @@ abstract class ArrangeTextDump(arrangetree: ArrangeText)(implicit cfg: CFG) {
     implicit def vectors2Vectors(v: Vector[Word]): Vector[String] = Vector(v.map {
         case (x, y) => (arrangetree.index.rmap.getOrElse(x, "unknown" /*"Word is unknown or index possibly is old"*/ ) -> y)
     } toList)
-    
+
 }
 
 class ArrangeText()(implicit cfg: CFG) {
@@ -108,7 +105,10 @@ class ArrangeText()(implicit cfg: CFG) {
     })
 
     lazy val (vectors, index) = sample(
-        List(),
+        for {
+            file <- cfg.files
+            page <- Try(file.readLines().mkString(" ")).toOption
+        } yield (page, file),
         List(), String2Word()
     )
 
@@ -116,12 +116,12 @@ class ArrangeText()(implicit cfg: CFG) {
         debug.time("clustering") {
             Clusters(tree)
         }
-    
+
     lazy val clusters1 =
         debug.time("clustering") {
             Clusters(tree)
         }
-    
+
     def tree_opt = (1 to 5).foldLeft(tree)({
         case (tree, n) =>
             debug.time("Rectifying #%3d = %4.3f %d".format(

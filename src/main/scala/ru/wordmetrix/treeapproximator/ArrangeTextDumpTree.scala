@@ -2,6 +2,7 @@ package ru.wordmetrix.treeapproximator
 
 import java.io.File
 
+
 import scala.Array.canBuildFrom
 import scala.Option.option2Iterable
 import scala.collection.TraversableOnce.flattenTraversableOnce
@@ -9,22 +10,28 @@ import scala.util.matching.Regex
 
 
 import ru.wordmetrix.smartfile.SmartFile.{fromFile, fromString, toFile}
-import ru.wordmetrix.utils.CFG
+import ru.wordmetrix.utils._
 import ru.wordmetrix.utils.Use.anyToUse
 import ru.wordmetrix.vector.Vector
 
 class ArrangeTextDumpTree(val arrangetree: ArrangeText)(implicit cfg: CFG)
         extends ArrangeTextDump(arrangetree) {
 
-    val tree = arrangetree.tree_aligned
+   val tree = arrangetree.tree_aligned
     
-    val path = cfg.path
+   val path = cfg.path
+   
    type Word = Int
+   
    type Node = TreeApproximator.Node[Word, File]
    type Tree = TreeApproximator.Tree[Word, File]
    type Leaf = TreeApproximator.Leaf[Word, File]
+   type Empty = TreeApproximator.Empty[Word, File]
 
     def dump(tree: Tree = tree, path: File = path): Unit = tree match {
+        case node : Empty =>
+            log("Tree is empty")
+            
         case node: Node => {
             val stopword = "[\\W+]".r.split(path.toString).map(_.trim).toSet
 
