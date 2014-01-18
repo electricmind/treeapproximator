@@ -7,7 +7,7 @@ import java.net.URI
  * CFG: Object that holds a set of the parameters of current session.
  */
 
-object CFGParse {
+object CFG {
     val rkey = """-(.+)""".r
 
     def apply(args: Array[String]): CFG = apply(args.toList)
@@ -58,15 +58,15 @@ object CFGParse {
             apply(list, cfg, seeds)
         }
 
-        case seed :: list =>
-            apply(list, cfg.copy(seeds = new URI(seed) :: seeds))
+        case arg :: list =>
+            apply(list, cfg.copy(args = arg :: cfg.args))
 
         case List() => cfg.copy(
             sampling = cfg.sampling match {
                 case x if x.isAbsolute => x
                 case x                 => new File(cfg.path, x.getPath)
             },
-            seeds = cfg.seeds.reverse)
+            args = cfg.args.reverse)
     }
 }
 /* 
@@ -85,7 +85,11 @@ case class CFG(
     val sigma: Double = 1.0,
     val limit: Int = 1000,
     val cache: File = new File("/tmp/webgetcache"),
-    val seeds: List[URI] = List()) {}
+    val args: List[String] = List()) {
+    
+    lazy val seeds = args.map(x => new URI(x))
+    lazy val files = args.map(x => new File(x))
+}
 
 object debug {
     def apply(format: String, p: Any*)(implicit cfg: CFG) = {
