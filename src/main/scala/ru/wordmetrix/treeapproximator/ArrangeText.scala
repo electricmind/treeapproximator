@@ -117,7 +117,14 @@ class ArrangeText()(implicit cfg: CFG) {
         debug.time("clustering") {
             Clusters(tree)
         }
-
+    
+    lazy val clusters1 =
+        debug.time("clustering") {
+            Clusters(tree)
+        }
+    
+    //clusters1.map({ case x => x } )
+    
     def tree_opt = (1 to 5).foldLeft(tree)({
         case (tree, n) =>
             debug.time("Rectifying #%3d = %4.3f %d".format(
