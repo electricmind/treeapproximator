@@ -72,6 +72,7 @@ object ArrangeText extends App {
 }
 
 abstract class ArrangeTextDump(arrangetree: ArrangeText)(implicit cfg: CFG) {
+    
     def vector2Title(v: Vector[String], n: Int = 5, stopword: Set[String] = Set(" ")) = {
         v.toList.sortBy(-_._2).takeWhile(_._2 > 0d).map(_._1).filterNot(stopword).filterNot(Set(" ", "")).take(n).mkString(" ")
     }
@@ -80,9 +81,8 @@ abstract class ArrangeTextDump(arrangetree: ArrangeText)(implicit cfg: CFG) {
         case (x, y) => (arrangetree.index.rmap.getOrElse(x, "unknown" /*"Word is unknown or index possibly is old"*/ ) -> y)
     } toList)
     
-    //def dump() : Unit
-
 }
+
 class ArrangeText()(implicit cfg: CFG) {
     type Word = Int
     type Node = TreeApproximator.Node[Word, File]
@@ -122,8 +122,6 @@ class ArrangeText()(implicit cfg: CFG) {
             Clusters(tree)
         }
     
-    //clusters1.map({ case x => x } )
-    
     def tree_opt = (1 to 5).foldLeft(tree)({
         case (tree, n) =>
             debug.time("Rectifying #%3d = %4.3f %d".format(
@@ -137,22 +135,6 @@ class ArrangeText()(implicit cfg: CFG) {
         val tree = tree_opt.align()._1
         tree
     }
-
-    /**
-     *
-     */
-
-    /*
-   val vectors = Iterator.iterate[
-       (
-               Vector[Word],
-               String2Word)
-               ](
-                       (Vector[Word](),String2Word())
-                       ) {
-       case (Vector)
-   }
-   */
 
     case class String2Word(val map: Map[String, Int] = Map(),
                            val rmap: Map[Int, String] = Map(),
