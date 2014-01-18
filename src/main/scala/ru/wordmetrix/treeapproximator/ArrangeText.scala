@@ -14,6 +14,8 @@ import ru.wordmetrix.utils.debug
 import ru.wordmetrix.vector.Vector
 import impl._
 import scala.util.matching.Regex
+import scala.util.Try
+import ru.wordmetrix.utils.CFG
 
 /**
  *  ArrangeText is a strategy that places a bunch of text in convenient fashion.
@@ -23,21 +25,179 @@ import scala.util.matching.Regex
  *  page of links on web pages (assuming that an original URI is available).
  */
 object ArrangeText extends App {
-    implicit lazy val cfg = CFG(isdebug = true)
+
+    override def main(args: Array[String]) {
+
+        val (command, args1) = args match {
+            case Array(command, args @ _*) if Set("tree", "cluster", "links")(command) =>
+                (Some(command), args.toList)
+
+            case args @ Array(arg, _@ _*) => (Some("all"), args.toList)
+
+            case args @ _ =>
+                println("\nEnter: (tree | cluster | links) [Options] [<FILE> [..]]\n")
+                (None, args.toList)
+        }
+
+        implicit val cfg = CFG(args1)
+
+        lazy val arrangetext = ArrangeText()
+
+        command foreach {
+            case "tree" => 
+                new ArrangeTextDumpTree(arrangetext).dump() //arrange_tree(tree_aligned, target)
+
+            case "cluster" => 
+                new ArrangeTextDumpClusters(arrangetext).dump()
+            
+
+            case "links" => 
+                new ArrangeTextDumpHTML(arrangetext).dump()
+
+            case "all" =>
+                 println("tree.size = " + arrangetext.tree.size)
+                 new ArrangeTextDumpTree(arrangetext).dump() //arrange_tree(tree_aligned, target)
+
+                 println("cluster suze = " + arrangetext.clusters.size)
+                 new ArrangeTextDumpClusters(arrangetext).dump()
+
+                 println("links = " + arrangetext.clusters.size)
+
+                
+
+            case _ => println("Huh, boyz ...")
+        }
+    }
+
+    def apply()(implicit cfg: CFG) = new ArrangeText()
+}
+
+abstract class ArrangeTextDump(arrangetree: ArrangeText)(implicit cfg: CFG) {
+    def vector2Title(v: Vector[String], n: Int = 5, stopword: Set[String] = Set(" ")) = {
+        v.toList.sortBy(-_._2).takeWhile(_._2 > 0d).map(_._1).filterNot(stopword).filterNot(Set(" ", "")).take(n).mkString(" ")
+    }
+
+    implicit def vectors2Vectors(v: Vector[Word]): Vector[String] = Vector(v.map {
+        case (x, y) => (arrangetree.index.rmap.getOrElse(x, "unknown" /*"Word is unknown or index possibly is old"*/ ) -> y)
+    } toList)
+    
+    def dump() : Unit
+
+}
+class ArrangeText()(implicit cfg: CFG) {
+    /*    
+
+*/
+
+    val start_time = System.currentTimeMillis()
+
+    lazy val tree: Tree = vectors.zipWithIndex.foldLeft(TreeApproximator[Word, File]())({
+        case (tree, ((vector, file), n)) => debug.time("%s %d %s tree(%s).energy => %4.3f, length = %d / %d".format(
+            (System.currentTimeMillis() - start_time),
+            tree.n,
+            index.map.size,
+            file,
+            tree.energy2,
+            vector.size,
+            tree.average.size)) {
+            {
+                if (n % 100 == 0) System.gc()
+                (tree + (vector, file)).rectify(2)
+            }
+        }
+    })
+
+    lazy val (vectors, index) = sample(
+        List(),
+        List(), String2Word()
+    )
+
+    lazy val clusters: Iterable[Iterable[Vector[Word]]] =
+        debug.time("clustering") {
+            Clusters(tree)
+        }
+
+    def tree_opt = (1 to 5).foldLeft(tree)({
+        case (tree, n) =>
+            debug.time("Rectifying #%3d = %4.3f %d".format(
+                n, tree.energy2, tree.average.size)
+            ) {
+                tree.rectify(tree.n)
+            }
+    })
+
+    def tree_aligned = (cfg.path / "tree.dat") cache {
+        val tree = tree_opt.align()._1
+        tree
+    }
+
+    /**
+     *
+     */
+
+    /*
+   val vectors = Iterator.iterate[
+       (
+               Vector[Word],
+               String2Word)
+               ](
+                       (Vector[Word](),String2Word())
+                       ) {
+       case (Vector)
+   }
+   */
+
+    case class String2Word(val map: Map[String, Int] = Map(),
+                           val rmap: Map[Int, String] = Map(),
+                           n: Int = 0) {
+        def update(word: String) = copy(
+            map = map + (word -> (n + 1)),
+            rmap = rmap + ((n + 1) -> word),
+            n + 1
+        )
+    }
+
+    val delimiter: Regex = """\W+""".r
+
+    def sample(
+        files: List[(String, File)],
+        vectors: List[(Vector[Word], File)],
+        index: String2Word): (List[(Vector[Word], File)], String2Word) =
+        files match {
+            case (s, file) :: files =>
+                val countwords = for {
+                    (x, ys) <- (for {
+                        word <- delimiter.split(s)
+                        if word.length > cfg.wordlen
+                    } yield word).groupBy(x => x.toLowerCase())
+
+                    y <- Some(ys.toList.length.toDouble)
+                    if y > cfg.wordfreq
+                } yield { x -> y }
+
+                val (countids, index1) = countwords.foldLeft(
+                    Map[Word, Double](), index
+                ) {
+                        case ((map, index), (x, y)) =>
+                            val index1 = index.update(x)
+                            (map + (index.n -> y), index)
+                    }
+
+                sample(
+                    files,
+                    (Vector(countids.toList), file) :: vectors,
+                    index1
+
+                )
+            case List() => (vectors, index)
+        }
+
+}
+
+ /*   
     type Word = Int
     implicit lazy val accuracy: Double = 0.01
 
-    object string2word {
-        var map = Map[String, Word]()
-        val words = Iterator.from(10)
-        var inverted = Map[Word, String]()
-        def apply(s: String) = {
-            val word = map.getOrElse(s, words.next)
-            map += (s -> word)
-            inverted += (word -> s)
-            word
-        }
-    }
 
     var root = "/tmp"
     lazy val inverted = root / "word2string.dat" cache {
@@ -49,153 +209,13 @@ object ArrangeText extends App {
         case (x, y) => (inverted.getOrElse(x, "unknown" /*"Word is unknown or index possibly is old"*/ ) -> y)
     } toList)
 
-    def vector2Title(v: Vector[String], n: Int = 5, stopword: Set[String] = Set(" ")) = {
-        v.toList.sortBy(-_._2).takeWhile(_._2 > 0d).map(_._1).filterNot(stopword).filterNot(Set(" ", "")).take(n).mkString(" ")
-    }
 
-    def arrange_tree(tree: Tree[Word, File], path: File): Unit = tree match {
-        case node: Node[Word, File] => {
-            val stopword = "[\\W+]".r.split(path.toString).map(_.trim).toSet
-            val centroid_delta_1 = node.child1.average.normal - node.child2.average.normal
-            val path1 = path / (if (path.toString.length > 1000) "1" else "1 : %s".format(vector2Title(centroid_delta_1, 3, stopword)))
 
-            path1 / "vocabulary.txt" write (centroid_delta_1)
-            arrange_tree(node.child1, path1)
-
-            val centroid_delta_2 = node.child2.average.normal - node.child1.average.normal
-            val path2 = path / (if (path.toString.length > 1000) "2" else "2 : %s".format(vector2Title(centroid_delta_2, 3, stopword)))
-
-            path2 / "vocabulary.txt" write (centroid_delta_2)
-            arrange_tree(node.child2, path2)
-        }
-
-        case leaf: Leaf[Word, File] =>
-            leaf.value.copyTo(path / leaf.value.toString)
-    }
-
-    def arrange_cluster(map: Iterable[Iterable[Vector[Word]]], tree: Tree[Word, File], path: File) = {
-        val v2f = tree.toMap
-        val average = tree.average.normal
-        map.zipWithIndex foreach {
-            case (vs, i) =>
-                val centroid_delta = vs.reduce(_ + _).normal - average.normal
-                val path1 = path / "%04d : %s".format(i, vector2Title(centroid_delta))
-                path1 / "vocabulary.txt" write (centroid_delta)
-                vs.zipWithIndex foreach {
-                    // TODO: The vector is lost sometimes
-                    case (v, j) => v2f.get(v) use {
-                        case None =>
-                            println("We met a problem with v: " + v)
-                            v2f.keys.maxBy(x => v * x) use {
-                                x =>
-                                    {
-                                        println("The best solution is x: " + x)
-                                        println("that is as good as " + x * v + " " + x.normal * v.normal + " " + (x - v).norm)
-                                    }
-                            }
-                        case Some(x) => x.copyTo(path1 / "%03d-%s".format(j, x.getName()))
-                    }
-                }
-        }
-    }
-
-    def splitter(ss: List[String],
-                 delimiter: Regex = """\W+""".r): List[(Int, Double)] =
-        for {
-            word <- ss.map(delimiter.split)
-            if word.length > 3
-            (x, ys) <- word.groupBy(x => x.toLowerCase())
-            y <- Some(ys.toList.length.toDouble)
-            if y > 5
-        } yield {
-            string2word(x) -> y
-        }
+    
 
     override def main(args: Array[String]) {
-        val (command, target, files) = args match {
-            case Array(command, target, files @ _*) if Set("tree", "cluster", "links")(command) =>
-                (command, target, files)
 
-            case Array(target, files @ _*) => ("both", target, files)
-
-            case _ =>
-                println("\nEnter: tree | cluster <PATH> [<FILE> [..]]\n")
-                ("nothing", ".", Seq[String]())
-        }
-        root = target
-
-        def vectors = Random.shuffle(files).map(x => new File(x)).map(x => try {
-            Some(
-                (Vector(splitter(x.readLines().toList)), x)
-            )
-        } catch {
-            case x: Throwable => println("File open failure: " + x); None
-        }).flatten
-
-        val t = System.currentTimeMillis()
-
-        def tree = vectors.zipWithIndex.foldLeft(TreeApproximator[Word, File]())({
-            case (tree, ((vector, file), n)) => {
-                debug.time("%s %d %s tree(%s).energy => %4.3f, length = %d / %d".format(
-                    (System.currentTimeMillis() - t),
-                    tree.n,
-                    string2word.map.size,
-                    file,
-                    tree.energy2,
-                    vector.size,
-                    tree.average.size)
-                ) {
-                    if (n % 100 == 0) System.gc()
-                    (tree + (vector, file)).rectify(2)
-                }
-            }
-        })
-
-        def tree_opt = (1 to 5).foldLeft(tree)({
-            case (tree, n) =>
-                debug.time("Rectifying #%3d = %4.3f %d".format(
-                    n, tree.energy2, tree.average.size)
-                ) {
-                    tree.rectify(tree.n)
-                }
-        })
-
-        def tree_aligned = (target / "tree.dat") cache {
-            val tree = tree_opt.align()._1
-            tree
-        }
-
-        command match {
-            case "tree" => arrange_tree(tree_aligned, target)
-
-            case "cluster" => tree_aligned use {
-                tree => arrange_cluster(debug.time("clustering") { Clusters(tree) }, tree, target)
-            }
-
-            case "links" => tree_aligned use {
-                tree =>
-                    target / "index.html" write (
-                        debug.time("clustering") { Clusters(tree) }
-                        .arrange_cluster_into_jquery_ui(tree.toMap, tree.average.normal, root.getParent().getName(), target).toString
-                    )
-            }
-
-            case "both" =>
-                tree_aligned use {
-                    tree =>
-                        {
-                            println("tree.size = " + tree.size)
-                            val c = debug.time("clustering") { Clusters(tree) }
-                            println("cluster suze = " + c.size)
-                            arrange_cluster(c, tree, target / "cluster")
-                            target / "index.html" write (
-                                c.arrange_cluster_into_jquery_ui(tree.toMap, tree.average.normal, root.getParent().getName(), target).toString
-                            )
-                            arrange_tree(tree, target / "tree")
-                        }
-                }
-
-            case _ => println("Huh, boyz ...")
-        }
     }
 }
+*/
+

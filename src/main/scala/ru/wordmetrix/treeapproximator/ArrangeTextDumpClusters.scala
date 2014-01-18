@@ -18,7 +18,7 @@ import ru.wordmetrix.vector.Vector
 class ArrangeTextDumpClusters(arrangetree: ArrangeText)(implicit cfg: CFG)
         extends ArrangeTextDump(arrangetree) {
 
-    val tree: Tree = arrangetree.tree
+    val tree: Tree = arrangetree.tree_aligned
     val map: Iterable[Iterable[Vector[Word]]] = arrangetree.clusters
     val path = cfg.path
 

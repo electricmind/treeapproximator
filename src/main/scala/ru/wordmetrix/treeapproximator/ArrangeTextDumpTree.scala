@@ -16,7 +16,8 @@ import ru.wordmetrix.vector.Vector
 class ArrangeTextDumpTree(arrangetree: ArrangeText)(implicit cfg: CFG)
         extends ArrangeTextDump(arrangetree) {
 
-    val tree = arrangetree.tree
+    val tree = arrangetree.tree_aligned
+    
     val path = cfg.path
 
     def dump(tree: Tree = tree, path: File = path): Unit = tree match {
@@ -58,5 +59,4 @@ class ArrangeTextDumpTree(arrangetree: ArrangeText)(implicit cfg: CFG)
         case leaf: Leaf =>
             leaf.value.copyTo(path / leaf.value.toString)
     }
-
 }
