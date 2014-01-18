@@ -1,5 +1,5 @@
 package ru.wordmetrix.treeapproximator
-
+ 
 import ru.wordmetrix.utils.CFG
 import java.io.File
 
@@ -8,7 +8,6 @@ import scala.Option.option2Iterable
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.util.matching.Regex
 
-import impl._
 import ru.wordmetrix.smartfile.SmartFile.{ fromFile, fromString, toFile }
 import ru.wordmetrix.utils.CFG
 import ru.wordmetrix.utils.log
@@ -17,12 +16,17 @@ import ru.wordmetrix.vector.Vector
 
 class ArrangeTextDumpClusters(arrangetree: ArrangeText)(implicit cfg: CFG)
         extends ArrangeTextDump(arrangetree) {
+    
+   type Word = Int
+   type Node = TreeApproximator.Node[Word, File]
+   type Tree = TreeApproximator.Tree[Word, File]
+   type Leaf = TreeApproximator.Leaf[Word, File]
 
-    val tree: Tree = arrangetree.tree_aligned
+     val tree: Tree = arrangetree.tree_aligned
     val map: Iterable[Iterable[Vector[Word]]] = arrangetree.clusters
     val path = cfg.path
 
-    def arrange_cluster() = {
+    def dump() = {
         val v2f = tree.toMap
         val average = tree.average.normal
         map.zipWithIndex foreach {

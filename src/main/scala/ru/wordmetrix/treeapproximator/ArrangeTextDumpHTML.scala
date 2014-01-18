@@ -1,7 +1,5 @@
 package ru.wordmetrix.treeapproximator
 
-import ArrangeText.{ Word,vectors2Vectors,vector2Title,inverted }
-import ru.wordmetrix.treeapproximator.TreeApproximator.{ Leaf, Node, Tree }
 import java.io.File
 import scala.xml.Unparsed
 
@@ -11,15 +9,35 @@ import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.util.Random
 import scala.xml.{ Text, Unparsed }
 
+///import ru.wordmetrix.smartfile
+
+
+ 
 import ru.wordmetrix.smartfile.SmartFile.{ fromFile, fromString, toFile }
+
+  
 import ru.wordmetrix.treeapproximator.TreeApproximator.{ Leaf, Node, Tree }
 import ru.wordmetrix.utils.CFG
 import ru.wordmetrix.utils.Use.anyToUse
 import ru.wordmetrix.utils.debug
 import ru.wordmetrix.vector.Vector
 
-object impl {
-    implicit class Tree2HtmlPage(map: Iterable[Iterable[Vector[Word]]]) {
+import ru.wordmetrix.utils.CFG
+
+
+
+class ArrangeTextDumpHTML(arrangetree: ArrangeText)(implicit cfg: CFG)
+        extends ArrangeTextDump(arrangetree) {
+    def dump() = { }
+/*
+    tree_aligned use {
+                tree =>
+                    target / "index.html" write (
+                        debug.time("clustering") { Clusters(tree) }
+                        .arrange_cluster_into_jquery_ui(tree.toMap, tree.average.normal, root.getParent().getName(), target).toString
+                    )
+
+
         def arrange_cluster_into_jquery_ui(v2f : Map[Vector[Word],File], average : Vector[Word], name : String, path: File) =
             {
                 val clusters = map.zipWithIndex.toList
@@ -185,4 +203,6 @@ object impl {
 
             }
     }
+    
+    */
 }

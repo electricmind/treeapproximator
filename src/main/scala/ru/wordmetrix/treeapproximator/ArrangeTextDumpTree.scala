@@ -7,18 +7,22 @@ import scala.Option.option2Iterable
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.util.matching.Regex
 
-import impl._
+
 import ru.wordmetrix.smartfile.SmartFile.{fromFile, fromString, toFile}
 import ru.wordmetrix.utils.CFG
 import ru.wordmetrix.utils.Use.anyToUse
 import ru.wordmetrix.vector.Vector
 
-class ArrangeTextDumpTree(arrangetree: ArrangeText)(implicit cfg: CFG)
+class ArrangeTextDumpTree(val arrangetree: ArrangeText)(implicit cfg: CFG)
         extends ArrangeTextDump(arrangetree) {
 
     val tree = arrangetree.tree_aligned
     
     val path = cfg.path
+   type Word = Int
+   type Node = TreeApproximator.Node[Word, File]
+   type Tree = TreeApproximator.Tree[Word, File]
+   type Leaf = TreeApproximator.Leaf[Word, File]
 
     def dump(tree: Tree = tree, path: File = path): Unit = tree match {
         case node: Node => {

@@ -1,7 +1,7 @@
 package ru.wordmetrix.treeapproximator
 import ru.wordmetrix.vector._
 import ru.wordmetrix.utils.Use._
-
+ 
 import Clusters._
 
 class Cluster[F](val vector: V[Vector[F]],

@@ -12,10 +12,10 @@ import ru.wordmetrix.utils.CFG
 import ru.wordmetrix.utils.Use.anyToUse
 import ru.wordmetrix.utils.debug
 import ru.wordmetrix.vector.Vector
-import impl._
+
 import scala.util.matching.Regex
 import scala.util.Try
-import ru.wordmetrix.utils.CFG
+import ru.wordmetrix.utils._
 
 /**
  *  ArrangeText is a strategy that places a bunch of text in convenient fashion.
@@ -26,7 +26,7 @@ import ru.wordmetrix.utils.CFG
  */
 object ArrangeText extends App {
 
-    override def main(args: Array[String]) {
+     override def main(args: Array[String]) {
 
         val (command, args1) = args match {
             case Array(command, args @ _*) if Set("tree", "cluster", "links")(command) =>
@@ -39,7 +39,7 @@ object ArrangeText extends App {
                 (None, args.toList)
         }
 
-        implicit val cfg = CFG(args1)
+        implicit val cfg = CFG1(args1)
 
         lazy val arrangetext = ArrangeText()
 
@@ -81,13 +81,14 @@ abstract class ArrangeTextDump(arrangetree: ArrangeText)(implicit cfg: CFG) {
         case (x, y) => (arrangetree.index.rmap.getOrElse(x, "unknown" /*"Word is unknown or index possibly is old"*/ ) -> y)
     } toList)
     
-    def dump() : Unit
+    //def dump() : Unit
 
 }
 class ArrangeText()(implicit cfg: CFG) {
-    /*    
-
-*/
+    type Word = Int
+    type Node = TreeApproximator.Node[Word, File]
+    type Tree = TreeApproximator.Tree[Word, File]
+    type Leaf = TreeApproximator.Leaf[Word, File]
 
     val start_time = System.currentTimeMillis()
 

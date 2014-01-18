@@ -6,11 +6,11 @@ import java.net.URI
 /*
  * CFG: Object that holds a set of the parameters of current session.
  */
-
-object CFG {
+ 
+object CFG1 {
     val rkey = """-(.+)""".r
 
-    def apply(args: Array[String]): CFG = apply(args.toList)
+   // def apply(args: Array[String]): CFG = apply(args.toList)
 
     def apply(list: List[String], cfg: CFG = CFG(),
               seeds: List[URI] = List()): CFG = list match {
@@ -31,6 +31,12 @@ object CFG {
 
         case rkey("servers") :: value :: list =>
             apply(list, cfg.copy(servers = value.toInt), seeds)
+            
+        case rkey("wordlen") :: value :: list =>
+            apply(list, cfg.copy(wordlen = value.toInt), seeds)
+            
+        case rkey("wordfreq") :: value :: list =>
+            apply(list, cfg.copy(wordfreq = value.toInt), seeds)
 
         case rkey("targeting") :: value :: list =>
             apply(list, cfg.copy(targeting = value.toDouble), seeds)
@@ -84,6 +90,8 @@ case class CFG(
     val targets: Int = 9,
     val sigma: Double = 1.0,
     val limit: Int = 1000,
+    val wordlen : Int = 3,
+    val wordfreq : Int = 5,
     val cache: File = new File("/tmp/webgetcache"),
     val args: List[String] = List()) {
     

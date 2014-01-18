@@ -1,4 +1,5 @@
 package ru.wordmetrix.treeapproximator
+
 import ru.wordmetrix.vector._
 import TreeApproximator._
 import scala.annotation.tailrec
