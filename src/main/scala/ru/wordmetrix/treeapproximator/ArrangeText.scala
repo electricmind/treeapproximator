@@ -51,7 +51,11 @@ object ArrangeText extends App {
                 new ArrangeTextDumpClusters(arrangetext).dump()
 
             case "links" =>
-                new ArrangeTextDumpHTML(arrangetext).dump()
+                new ArrangeTextDumpHTML(arrangetext, cfg.f2u match {
+                    case CFG.F2U.Simple => new File2URITransform()
+                    case CFG.F2U.Map => new File2URIMap()
+                    case CFG.F2U.Dump => new File2URIDump()
+                }).dump()
 
             case "all" =>
                 println("tree.size = " + arrangetext.tree.size)

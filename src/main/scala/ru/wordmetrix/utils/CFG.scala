@@ -6,14 +6,18 @@ import java.net.URI
 /*
  * CFG: Object that holds a set of the parameters of current session.
  */
- 
+
 object CFG {
     val rkey = """-(.+)""".r
 
-   // def apply(args: Array[String]): CFG = apply(args.toList)
+    // def apply(args: Array[String]): CFG = apply(args.toList)
 
-    def apply(list: List[String]) : CFG = apply(list, CFG(), List())
-    
+    object F2U extends Enumeration {
+        val Simple, Dump, Map = Value
+    }
+
+    def apply(list: List[String]): CFG = apply(list, CFG(), List())
+
     def apply(list: List[String], cfg: CFG, // = CFG(),
               seeds: List[URI] // = List()
               ): CFG = list match {
@@ -22,6 +26,16 @@ object CFG {
             println(cfg)
             scala.sys.exit
             apply(list, cfg, seeds)
+
+        case rkey("map") :: file :: list =>
+            apply(list, cfg.copy(map = new File(file), f2u = F2U.Map), seeds)
+
+        case rkey("f2u") :: f2u :: list =>
+            apply(list, cfg.copy(f2u = f2u match {
+                case "simple" => F2U.Simple
+                case "dump"   => F2U.Dump
+                case "map"    => F2U.Map
+            }), seeds)
 
         case rkey("path") :: path :: list =>
             apply(list, cfg.copy(path = new File(path)), seeds)
@@ -34,10 +48,10 @@ object CFG {
 
         case rkey("servers") :: value :: list =>
             apply(list, cfg.copy(servers = value.toInt), seeds)
-            
+
         case rkey("wordlen") :: value :: list =>
             apply(list, cfg.copy(wordlen = value.toInt), seeds)
-            
+
         case rkey("wordfreq") :: value :: list =>
             apply(list, cfg.copy(wordfreq = value.toInt), seeds)
 
@@ -70,12 +84,16 @@ object CFG {
         case arg :: list =>
             apply(list, cfg.copy(args = arg :: cfg.args), seeds)
 
-        case List() => cfg.copy(
-            sampling = cfg.sampling match {
+        case List() =>
+            def absolute(x: File) = x match {
                 case x if x.isAbsolute => x
                 case x                 => new File(cfg.path, x.getPath)
-            },
-            args = cfg.args.reverse)
+            }
+            cfg.copy(
+                sampling = absolute(cfg.sampling),
+                map = absolute(cfg.map),
+                args = cfg.args.reverse
+            )
     }
 }
 /* 
@@ -83,21 +101,23 @@ object CFG {
  * 
 */
 case class CFG(
-    val path: File = new File("/tmp/webcrawler"),
-    val sampling: File = new File("sampling.lst"),
-    val isdebug: Boolean = false,
-    val ish2p: Boolean = false,
-    val servers: Int = 2,
-    val targeting: Double = 0.01,
-    val prioriting : Double = 0.9,
-    val targets: Int = 9,
-    val sigma: Double = 1.0,
-    val limit: Int = 1000,
-    val wordlen : Int = 3,
-    val wordfreq : Int = 5,
-    val cache: File = new File("/tmp/webgetcache"),
-    val args: List[String] = List()) {
-    
+        val path: File = new File("/tmp/webcrawler"),
+        val sampling: File = new File("sampling.lst"),
+        val map: File = new File("map.lst"),
+        val isdebug: Boolean = false,
+        val ish2p: Boolean = false,
+        val servers: Int = 2,
+        val targeting: Double = 0.01,
+        val prioriting: Double = 0.9,
+        val targets: Int = 9,
+        val sigma: Double = 1.0,
+        val limit: Int = 1000,
+        val wordlen: Int = 3,
+        val wordfreq: Int = 5,
+        val f2u: CFG.F2U.Value = CFG.F2U.Simple,
+        val cache: File = new File("/tmp/webgetcache"),
+        val args: List[String] = List()) {
+
     lazy val seeds = args.map(x => new URI(x))
     lazy val files = args.map(x => new File(x))
 }

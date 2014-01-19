@@ -2,26 +2,28 @@ package ru.wordmetrix.treeapproximator
 
 import java.io.File
 import scala.xml.Unparsed
-
 import scala.Array.canBuildFrom
 import scala.Option.option2Iterable
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.util.Random
 import scala.xml.{ Text, Unparsed }
-
-///import ru.wordmetrix.smartfile
-
 import ru.wordmetrix.smartfile.SmartFile.{ fromFile, fromString, toFile }
-
 import ru.wordmetrix.treeapproximator.TreeApproximator.{ Leaf, Node, Tree }
 import ru.wordmetrix.utils.CFG
 import ru.wordmetrix.utils.Use.anyToUse
 import ru.wordmetrix.utils.debug
 import ru.wordmetrix.vector.Vector
-
 import ru.wordmetrix.utils.CFG
+import java.net.URI
+import sun.misc.BASE64Encoder
+import scala.util.Try
+import scala.util.Success
+import scala.util.Failure
+import scala.util.Success
+import ru.wordmetrix.utils.log
 
-class ArrangeTextDumpHTML(val arrangetree: ArrangeText)(implicit cfg: CFG)
+class ArrangeTextDumpHTML[U <: File2URIBase](val arrangetree: ArrangeText,
+                                             f2uri: U)(implicit cfg: CFG)
         extends ArrangeTextDump(arrangetree) {
 
     val path = cfg.path
@@ -29,12 +31,12 @@ class ArrangeTextDumpHTML(val arrangetree: ArrangeText)(implicit cfg: CFG)
     val average = arrangetree.tree.average.normal
     val clusters = arrangetree.clusters.zipWithIndex.toList
     val index = arrangetree.index
-    
+
     def dump(name: String = "") = {
         path / "index.html" write xml(name).toString
-    } 
-   
-    def xml(name : String ="") = {
+    }
+
+    def xml(name: String = "") = {
         <html lang="en">
             <head>
                 <meta charset="utf-8"/>
@@ -125,8 +127,6 @@ class ArrangeTextDumpHTML(val arrangetree: ArrangeText)(implicit cfg: CFG)
                 </div>
                 <div id="top" style="height:150px"> </div>
                 <div id="accordion" style="width:185px; font-size:0.7em"> {
-                    
-                    
                     clusters map {
                         case (vs, i) => {
                             val centroid_delta = vs.reduce(_ + _).normal - average.normal
@@ -135,36 +135,33 @@ class ArrangeTextDumpHTML(val arrangetree: ArrangeText)(implicit cfg: CFG)
                             } </h3>
                             <div><ul> {
                                 vs.zipWithIndex map {
-                                    case (v, j) => v2f.get(v) use {
-                                        case Some(x) =>
-                                            <li>
-                                                { //TODO: AT : create more suitable way to decode urls, might be using indexes?
-                                                    val href = x.getName().split("-") match {
-                                                        case Array(x, y, z)=> Text("http://" + x + "/" + y + "/" + z)
-                                                        case Array(x, y, z1, z2)=> Text("http://" + x + "/" + y + "/" + z1 + ":" + z2)
-                                                        case Array(x, y, ls @ _*)=> Text("http://" + x + "/" + y + "/" + ls.dropRight(1).mkString(":") + "/" + ls.lastOption.getOrElse(""))
-                                                        case _=> Text("http//example.org/")
-                                                    }
-                                                    val isframe = x.getName().split("-") match {
-                                                        case Array(x, y, "Special", _@ _*)=> false
-                                                        case _=> true
-                                                    }
-                                                    if (isframe)
-                                                        <a target="wiki" href={ href }> {
-                                                            x.getName().split("-").drop(2).map {
-                                                                _.replace("_", " ")
-                                                            }
-                                                        } </a>
-                                                    else
-                                                        <a target="_blank" href={ href } color="gray"> {
-                                                            x.getName().split("-").drop(2).map {
-                                                                _.replace("_", " ")
-                                                            }
-                                                        } </a>
-
+                                    case (v, j) => (
+                                        for {
+                                            file <- v2f.get(v)
+                                            uri <- f2uri.get(file)
+                                        } yield {
+                                            <li> {
+                                                val isframe = file.getName().split("-") match {
+                                                    case Array(x, y, "Special", _@ _*)=> false
+                                                    case _ => true
                                                 }
-                                            </li>
-                                    }
+                                                val filter = Set("http", "en.wikipedia.org", "wiki") //andThen (x => !x)
+                                                println(file, filter)
+                                                
+                                                val name = file.getName().split("-").dropWhile(filter).map {
+                                                    _.replace("_", " ")
+                                                } mkString("")
+                                                
+                                                println(name)
+                                                
+                                                if (isframe) <a target="wiki" href={ uri.toString }> {
+                                                    name
+                                                } </a>
+                                                else <a target="_blank" href={ uri.toString } color="gray"> {
+                                                    name
+                                                } </a>
+                                            } </li>
+                                        }).getOrElse("")
                                 }
                             } </ul> </div>
                         }
@@ -176,9 +173,12 @@ class ArrangeTextDumpHTML(val arrangetree: ArrangeText)(implicit cfg: CFG)
                             clusters map {
                                 case (vs, i) =>
                                     <div id={ "keyword" + i } class="ui-helper-hidden keyword">
-                                        { vs.reduce(_ + _).self.sortBy(-_._2).takeWhile(_._2 > 0).take(100).map(x => {
-                                            println(x)
-                                            index.rmap(x._1)} ).sorted.mkString(" ") }
+                                        {
+                                            vs.reduce(_ + _).self.sortBy(-_._2).takeWhile(_._2 > 0).take(100).map(x => {
+                                                println(x)
+                                                index.rmap(x._1)
+                                            }).sorted.mkString(" ")
+                                        }
                                     </div>
                             }
                         }
@@ -200,3 +200,52 @@ class ArrangeTextDumpHTML(val arrangetree: ArrangeText)(implicit cfg: CFG)
     }
 }
 
+/*
+ * Three different way resolve filename into links:
+ *  
+ *   - content of file is converted into URI as base64
+ *   - a dictionary maps name of file into URI
+ *   - parse file name with respect to how it was produced
+ */
+
+abstract class File2URIBase()(implicit cfg: CFG) {
+    def apply(f: File): URI = get(f).head
+    def get(f: File): Option[URI]
+
+}
+
+
+class File2URITransform()(implicit cfg: CFG) extends File2URIBase {
+    def get(f: File): Option[URI] =
+        f.getName().split("-") match {
+            case Array(x, y, z)       => Some(new URI("http://" + x + "/" + y + "/" + z))
+            case Array(x, y, z1, z2)  => Some(new URI("http://" + x + "/" + y + "/" + z1 + ":" + z2))
+            case Array(x, y, ls @ _*) => Some(new URI("http://" + x + "/" + y + "/" + ls.dropRight(1).mkString(":") + "/" + ls.lastOption.getOrElse("")))
+            case _                    => None
+        }
+}
+
+class File2URIMap()(implicit cfg: CFG) extends File2URIBase {
+    val map: Map[String, URI] = cfg.map.readLines.map {
+        case x => x.split(" : ")
+    } map {
+        case Array(f, uri) => f -> new URI(uri)
+    } toMap
+
+    def get(f: File): Option[URI] = map.get(f.getName())
+}
+
+class File2URIDump()(implicit cfg: CFG) extends File2URIBase {
+    def get(f: File): Option[URI] = Try(
+        new URI(
+            "data:text/html;base64," + new BASE64Encoder().encode((<pre> {
+                f.readLines().mkString("\n")
+            } </pre>).toString.getBytes()).split("\n").mkString("")
+        )
+    ) match {
+        case fail @ Failure (x) => 
+            log("Read %s error: %s", f, x) 
+            None
+        case Success(uri) => Option(uri)
+    }
+}
