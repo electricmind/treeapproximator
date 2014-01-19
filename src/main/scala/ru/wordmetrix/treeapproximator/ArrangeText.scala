@@ -16,6 +16,7 @@ import ru.wordmetrix.vector.Vector
 import scala.util.matching.Regex
 import scala.util.Try
 import ru.wordmetrix.utils._
+import scala.annotation.tailrec
 
 /**
  *  ArrangeText is a strategy that places a bunch of text in convenient fashion.
@@ -97,16 +98,16 @@ class ArrangeText()(implicit cfg: CFG) {
             tree.energy2,
             vector.size,
             tree.average.size)) {
-            {
-                if (n % 100 == 0) System.gc()
-                (tree + (vector, file)).rectify(2)
-            }
+            if (n % 100 == 0) System.gc()
+
+            (tree + (vector, file)).rectify(2)
+
         }
     })
 
     lazy val (vectors, index) = sample(
         for {
-            file <- cfg.files
+            file <- scala.util.Random.shuffle(cfg.files)
             page <- Try(file.readLines().mkString(" ")).toOption
         } yield (page, file),
         List(), String2Word()
@@ -139,16 +140,25 @@ class ArrangeText()(implicit cfg: CFG) {
     case class String2Word(val map: Map[String, Int] = Map(),
                            val rmap: Map[Int, String] = Map(),
                            n: Int = 0) {
-        def update(word: String) = copy(
-            map = map + (word -> (n + 1)),
-            rmap = rmap + ((n + 1) -> word),
-            n + 1
-        )
+        def update(word: String) = {
+
+            map.get(word) match {
+                case Some(x) => (x, this)
+                case None =>
+                    val x = n + 1
+                    (x, copy(
+                        map = map + (word -> x),
+                        rmap = rmap + (x -> word),
+                        x))
+            }
+
+        }
     }
 
     val delimiter: Regex = """\W+""".r
 
-    def sample(
+    @tailrec
+    private def sample(
         files: List[(String, File)],
         vectors: List[(Vector[Word], File)],
         index: String2Word): (List[(Vector[Word], File)], String2Word) =
@@ -168,8 +178,9 @@ class ArrangeText()(implicit cfg: CFG) {
                     Map[Word, Double](), index
                 ) {
                         case ((map, index), (x, y)) =>
-                            val index1 = index.update(x)
-                            (map + (index.n -> y), index)
+                            index.update(x) match {
+                                case (n,index) => (map + (n -> y), index)
+                            }
                     }
 
                 sample(
@@ -180,31 +191,4 @@ class ArrangeText()(implicit cfg: CFG) {
                 )
             case List() => (vectors, index)
         }
-
 }
-
- /*   
-    type Word = Int
-    implicit lazy val accuracy: Double = 0.01
-
-
-    var root = "/tmp"
-    lazy val inverted = root / "word2string.dat" cache {
-        string2word.inverted
-    }
-    implicit def string2File(s: String) = new File(s)
-
-    implicit def vectors2Vectors(v: Vector[Word]): Vector[String] = Vector(v.map {
-        case (x, y) => (inverted.getOrElse(x, "unknown" /*"Word is unknown or index possibly is old"*/ ) -> y)
-    } toList)
-
-
-
-    
-
-    override def main(args: Array[String]) {
-
-    }
-}
-*/
-

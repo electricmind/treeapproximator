@@ -68,6 +68,6 @@ class ArrangeTextDumpTree(val arrangetree: ArrangeText)(implicit cfg: CFG)
         }
 
         case leaf: Leaf =>
-            leaf.value.copyTo(path / leaf.value.toString)
+            leaf.value.copyTo(path / leaf.value.getName().toString)
     }
 }

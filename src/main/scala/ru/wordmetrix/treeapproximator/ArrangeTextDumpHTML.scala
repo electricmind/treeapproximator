@@ -31,6 +31,10 @@ class ArrangeTextDumpHTML(val arrangetree: ArrangeText)(implicit cfg: CFG)
     val index = arrangetree.index
     
     def dump(name: String = "") = {
+        path / "index.html" write xml(name).toString
+    } 
+   
+    def xml(name : String ="") = {
         <html lang="en">
             <head>
                 <meta charset="utf-8"/>
@@ -172,7 +176,9 @@ class ArrangeTextDumpHTML(val arrangetree: ArrangeText)(implicit cfg: CFG)
                             clusters map {
                                 case (vs, i) =>
                                     <div id={ "keyword" + i } class="ui-helper-hidden keyword">
-                                        { vs.reduce(_ + _).self.sortBy(-_._2).takeWhile(_._2 > 0).take(100).map(x => index.rmap(x._1)).sorted.mkString(" ") }
+                                        { vs.reduce(_ + _).self.sortBy(-_._2).takeWhile(_._2 > 0).take(100).map(x => {
+                                            println(x)
+                                            index.rmap(x._1)} ).sorted.mkString(" ") }
                                     </div>
                             }
                         }
