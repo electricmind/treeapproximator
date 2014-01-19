@@ -16,7 +16,6 @@ object Clusters {
             cs + (v1, v2)
             
         case (cs, ((v1, va1), (v2, va2))) =>
-            println("pairing failed", va1, va2)
             cs
 
     }
@@ -54,13 +53,6 @@ class Clusters[F](
         extends Iterable[Cluster[F]] {
 
     def iterator = {
-        println("starts = " + (heads.keySet -- joinlasts).toList.size)
-        println("continues = " + joinlasts.size)
-
-        println(joinheads.values.toSet.size, joinheads.values.toList.size)
-        println((joinheads.values.toSet & heads.values.toSet.map((x: Cluster[F]) => x.last)).size)
-        println((joinheads.values.toSet & heads.keySet).size, joinheads.values.toSet.size)
-
         // assert(joinheads.values.toSet.size
         //     == joinheads.values.toList.size, "Duplicate joins")
         //        
@@ -90,10 +82,8 @@ class Clusters[F](
                                 }
                             case None => starts match {
                                 case start :: starts =>
-                                    println(1)
                                     (heads.get(start), starts)
                                 case List() =>
-                                    println(7)
                                     (None, List())
                             }
                         }
@@ -115,7 +105,6 @@ class Clusters[F](
     def +(v1: Vector[F], v2: Vector[F]): Clusters[F] = {
         (heads.get(v2), lasts.get(v1)) match {
             case (Some(c1), Some(c2)) =>
-                println(1, v1, v2)
                 c2.unionIfCheck(c1) match {
                     case Some(c) =>
                         new Clusters(
@@ -130,7 +119,6 @@ class Clusters[F](
                 }
 
             case (Some(c1), None) =>
-                println(2, v1, v2)
                 (v1 +: c1) match {
                     case c => new Clusters(
                         (heads - v2) + (c.head -> c),
@@ -140,8 +128,7 @@ class Clusters[F](
                 }
 
             case (None, Some(c2)) =>
-                println(3, v1, v2)
-
+                
                 (c2 :+ v2) match {
                     case c => new Clusters(
                         heads + (c.head -> c),
@@ -152,8 +139,7 @@ class Clusters[F](
                 }
 
             case (None, None) =>
-                println(4, v1, v2)
-
+                
                 new Cluster(v1, v2) match {
                     case c => new Clusters(
                         heads + (v1 -> c),
