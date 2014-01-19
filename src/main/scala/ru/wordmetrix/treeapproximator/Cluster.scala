@@ -1,7 +1,7 @@
 package ru.wordmetrix.treeapproximator
 import ru.wordmetrix.vector._
 import ru.wordmetrix.utils.Use._
-
+ 
 import Clusters._
 
 class Cluster[F](val vector: V[Vector[F]],
@@ -39,11 +39,8 @@ class Cluster[F](val vector: V[Vector[F]],
 
     def unionIfCheck(that: Cluster[F]) = (this.last - that.head).norm match {
         case x => if (check(x) && that.check(x)) {
-            println("join")
-
             Some(union(that, x))
         } else {
-            println("discard")
             None
         }
     }
@@ -51,8 +48,6 @@ class Cluster[F](val vector: V[Vector[F]],
     def union(that: Cluster[F]): Cluster[F] = union(that, (last - that.head).norm)
 
     def union(that: Cluster[F], distance: Double) = {
-        println("Union this: " + vector)
-        println("Union that: " + that.vector)
         new Cluster[F](
             vector ++ that.vector,
             squares + that.squares + distance * distance
