@@ -21,7 +21,7 @@ class Html2Ascii(page: scala.xml.NodeSeq) {
             new SAXFactoryImpl().newSAXParser()) //to //\\ "BODY"
     )
 
-    val div = Set("p", "h1", "h2", "h3", "h4", "h5", "h6", "div")
+    val div = Set("p", "title", "h1", "h2", "h3", "h4", "h5", "h6", "div")
     val span = Set("i", "a", "b", "span", "sup")
     val discard = Set("img", "script", "form", "input", "button")
 
@@ -39,7 +39,9 @@ class Html2Ascii(page: scala.xml.NodeSeq) {
         }
     }
 
-    def wrap(size: Int = 72) = dump(page).split("\n").map({
+    def wrap(size: Int = 72) = {
+        dump(page).split("\n").map({
+    
         case x if x.length < size => List(x)
         case x => {
             x.split(" ").foldLeft(List[String]()) {
@@ -51,17 +53,25 @@ class Html2Ascii(page: scala.xml.NodeSeq) {
                 case (List(), w) => List(w)
             }.reverse
         }
-    }).flatten.mkString("\n")
-
+    }).flatten.map(_.trim).mkString("\n")
+    }
     def dump(nodes: Seq[scala.xml.Node] = page): String = {
         (nodes map {
+            case <html>{ nodes @ _* }</html> =>
+                dump(nodes)
+                
+            case <title>{ nodes @ _* }</title> => 
+                val s = dump(nodes)
+                s + "\n" + ("=" * s.length()) + "\n"
+                
             case <h1>{ nodes @ _* }</h1> => "\n = " + dump(nodes) + " =\n"
             case <h2>{ nodes @ _* }</h2> => "\n == " + dump(nodes) + " ==\n"
             case <h3>{ nodes @ _* }</h3> => "\n === " + dump(nodes) + " ===\n"
             case <h4>{ nodes @ _* }</h4> => "\n ==== " + dump(nodes) + " ====\n"
             case <h5>{ nodes @ _* }</h5> => "\n ===== " + dump(nodes) + " =====\n"
             case <h6>{ nodes @ _* }</h6> => "\n ====== " + dump(nodes) + " ======\n"
-
+           
+            
             case <table>{ tr @ _* }</table> => "\n" + "=" * 60 + "\n" + (tr map {
                 case <tr>{ td @ _* }</tr> => td map {
                     case <td>{ nodes @ _* }</td> => dump(nodes) match {

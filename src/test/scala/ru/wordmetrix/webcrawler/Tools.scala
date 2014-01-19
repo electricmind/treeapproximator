@@ -8,24 +8,27 @@ import akka.testkit.TestProbe
 import akka.actor.ActorRef
 import ru.wordmetrix.utils.Html2Ascii
 import org.scalatest.Matchers
+import scala.xml.Text
 
 trait Tools extends Matchers {
     def uri(n: Int = 0) = new URI(s"http://example.org/${n}")
+    def xml(n: Int) = <html><title>{ Text(s"Text$n") }</title><body>
+                              <a href={ uri(n).toString() }>
+                                  Test Test Test Test Test
+                              </a>
+                              <a href={ uri(n + 1).toString() }>
+                                  Test Test Test Test Test
+                              </a>
+                              <a href={ uri(n + 2).toString() }>
+                                  Test Test Test Test Test
+                              </a>
+                          </body>
+                      </html>
 
-    def xml(n: Int) = <html><body>
-                                <a href={ uri(n).toString() }>
-                                    Test Test Test Test Test
-                                </a>
-                                <a href={ uri(n + 1).toString() }>
-                                    Test Test Test Test Test
-                                </a>
-                                <a href={ uri(n + 2).toString() }>
-                                    Test Test Test Test Test
-                                </a>
-                            </body></html>
-
-    def text(n: Int): String = Html2Ascii(xml(n) \\ "body").wrap()
-
+    def text(n: Int): String = {
+        println(xml(n))
+        Html2Ascii(xml(n)).wrap()
+    }
     def TestActor(actor: TestProbe)(implicit system: akka.actor.ActorSystem): (TestProbe, Props) = {
         (actor, Props(new Actor {
             def receive = { case msg => actor.ref forward msg }
@@ -43,7 +46,7 @@ trait Tools extends Matchers {
                 case x                    => child forward x
             }
         }))
-        
+
     implicit class ExpectEx(probe: TestProbe) {
         def expectSet[U](msgs: U*) = {
             val collected = (1 to msgs.size).foldLeft(Set[U]()) {
