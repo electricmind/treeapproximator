@@ -31,12 +31,28 @@ class ArrangeTextDumpHTML[U <: File2URIBase](val arrangetree: ArrangeText,
     val average = arrangetree.tree.average.normal
     val clusters = arrangetree.clusters.zipWithIndex.toList
     val index = arrangetree.index
+    val central : File = cfg.target
 
-    def dump(name: String = "") = {
-        path / "index.html" write xml(name).toString
+    def dump() = {
+        path / "index.html" write xml(central).toString
     }
 
-    def xml(name: String = "") = {
+    def name(file: File) = {
+        val filter = Set("http", "en.wikipedia.org", "wiki")
+
+        val name1 = file.getName().split("-").dropWhile(filter).map {
+            _.replace("_", " ")
+        } mkString ("")
+
+        file.readLines()
+            .toList.map(_.trim)
+            .dropWhile(_ == "")
+            .headOption
+            .getOrElse(name1)
+
+    }
+
+    def xml(central: File) = {
         <html lang="en">
             <head>
                 <meta charset="utf-8"/>
@@ -107,22 +123,22 @@ class ArrangeTextDumpHTML[U <: File2URIBase](val arrangetree: ArrangeText,
             </head>
             <body>
                 <div id="header" style="position:fixed; z-index:100; background:white; top:0px">
-                    <h1> Clusters of Neighbours of <a href={ "http://en.wikipedia.org/wiki/" + name }>{
-                        name
+                    <h1> Clusters of Neighbours of <a href={ f2uri(central).toString() }>{
+                        name(central)
                     } </a> </h1>
                     <p>
                         This is an outcome of an algorithm that clusters
                         { v2f.size }
-                        of pages, closest to the word
-                            "{ name }
+                        of pages, closest to the page
+                            "{ name(central) }
                         ".
                             Each of the
                         { clusters.size }
                         groups below contains a few links that 
-                            point out to the wikipedia pages with similar 
+                            point out to the pages with similar 
                             content. The words in the title describes  traits 
                             of the content, up to 100 words are printed out 
-                            above wikipedia article when group is opened.
+                            above an article when group is opened.
                     </p>
                 </div>
                 <div id="top" style="height:150px"> </div>
@@ -140,27 +156,19 @@ class ArrangeTextDumpHTML[U <: File2URIBase](val arrangetree: ArrangeText,
                                             file <- v2f.get(v)
                                             uri <- f2uri.get(file)
                                         } yield {
-                                            <li> {
+                                            <li><nobr> {
                                                 val isframe = file.getName().split("-") match {
                                                     case Array(x, y, "Special", _@ _*)=> false
                                                     case _ => true
                                                 }
-                                                val filter = Set("http", "en.wikipedia.org", "wiki") //andThen (x => !x)
-                                                println(file, filter)
-                                                
-                                                val name = file.getName().split("-").dropWhile(filter).map {
-                                                    _.replace("_", " ")
-                                                } mkString("")
-                                                
-                                                println(name)
-                                                
+
                                                 if (isframe) <a target="wiki" href={ uri.toString }> {
-                                                    name
+                                                    name(file)
                                                 } </a>
                                                 else <a target="_blank" href={ uri.toString } color="gray"> {
-                                                    name
+                                                    name(file)
                                                 } </a>
-                                            } </li>
+                                            } </nobr></li>
                                         }).getOrElse("")
                                 }
                             } </ul> </div>
@@ -175,7 +183,6 @@ class ArrangeTextDumpHTML[U <: File2URIBase](val arrangetree: ArrangeText,
                                     <div id={ "keyword" + i } class="ui-helper-hidden keyword">
                                         {
                                             vs.reduce(_ + _).self.sortBy(-_._2).takeWhile(_._2 > 0).take(100).map(x => {
-                                                println(x)
                                                 index.rmap(x._1)
                                             }).sorted.mkString(" ")
                                         }
@@ -184,7 +191,7 @@ class ArrangeTextDumpHTML[U <: File2URIBase](val arrangetree: ArrangeText,
                         }
                     </div>
                     <br/>
-                    <iframe src={ "http://en.wikipedia.org/wiki/" + name } height="100%" width="100%" name="wiki"></iframe>
+                    <iframe src={ f2uri(central).toString() } height="100%" width="100%" name="wiki"></iframe>
                 </div>
                 <hr/>
                 <p>This page created with jquery-ui :) </p>
@@ -214,7 +221,6 @@ abstract class File2URIBase()(implicit cfg: CFG) {
 
 }
 
-
 class File2URITransform()(implicit cfg: CFG) extends File2URIBase {
     def get(f: File): Option[URI] =
         f.getName().split("-") match {
@@ -243,9 +249,9 @@ class File2URIDump()(implicit cfg: CFG) extends File2URIBase {
             } </pre>).toString.getBytes()).split("\n").mkString("")
         )
     ) match {
-        case fail @ Failure (x) => 
-            log("Read %s error: %s", f, x) 
-            None
-        case Success(uri) => Option(uri)
-    }
+            case fail @ Failure(x) =>
+                log("Read %s error: %s", f, x)
+                None
+            case Success(uri) => Option(uri)
+        }
 }

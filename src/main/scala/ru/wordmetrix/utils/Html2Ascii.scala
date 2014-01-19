@@ -13,7 +13,7 @@ object Html2Ascii {
     }
 }
 
-class Html2Ascii(page: scala.xml.NodeSeq) {
+class Html2Ascii(page: scala.xml.NodeSeq, debug: Boolean = false) {
 
     def this(page: String) = this(
         (new NoBindingFactoryAdapter).loadXML(
@@ -41,37 +41,37 @@ class Html2Ascii(page: scala.xml.NodeSeq) {
 
     def wrap(size: Int = 72) = {
         dump(page).split("\n").map({
-    
-        case x if x.length < size => List(x)
-        case x => {
-            x.split(" ").foldLeft(List[String]()) {
-                case (s :: ss, w) => s + " " + w match {
-                    case s if s.length < size => s :: ss
-                    case _ if w.length > size => w :: justify(s, size) :: ss
-                    case _                    => w :: justify(s, size) :: ss
-                }
-                case (List(), w) => List(w)
-            }.reverse
-        }
-    }).flatten.map(_.trim).mkString("\n")
+
+            case x if x.length < size => List(x)
+            case x => {
+                x.split(" ").foldLeft(List[String]()) {
+                    case (s :: ss, w) => s + " " + w match {
+                        case s if s.length < size => s :: ss
+                        case _ if w.length > size => w :: justify(s, size) :: ss
+                        case _                    => w :: justify(s, size) :: ss
+                    }
+                    case (List(), w) => List(w)
+                }.reverse
+            }
+        }).flatten.map(_.trim).mkString("\n")
+        //TODO: Use trimRight instead
     }
     def dump(nodes: Seq[scala.xml.Node] = page): String = {
         (nodes map {
             case <html>{ nodes @ _* }</html> =>
                 dump(nodes)
-                
-            case <title>{ nodes @ _* }</title> => 
+
+            case <title>{ nodes @ _* }</title> =>
                 val s = dump(nodes)
                 s + "\n" + ("=" * s.length()) + "\n"
-                
+
             case <h1>{ nodes @ _* }</h1> => "\n = " + dump(nodes) + " =\n"
             case <h2>{ nodes @ _* }</h2> => "\n == " + dump(nodes) + " ==\n"
             case <h3>{ nodes @ _* }</h3> => "\n === " + dump(nodes) + " ===\n"
             case <h4>{ nodes @ _* }</h4> => "\n ==== " + dump(nodes) + " ====\n"
             case <h5>{ nodes @ _* }</h5> => "\n ===== " + dump(nodes) + " =====\n"
             case <h6>{ nodes @ _* }</h6> => "\n ====== " + dump(nodes) + " ======\n"
-           
-            
+
             case <table>{ tr @ _* }</table> => "\n" + "=" * 60 + "\n" + (tr map {
                 case <tr>{ td @ _* }</tr> => td map {
                     case <td>{ nodes @ _* }</td> => dump(nodes) match {
@@ -95,8 +95,10 @@ class Html2Ascii(page: scala.xml.NodeSeq) {
             } mkString
 
             case <ol>{ li @ _* }</ol> => li.zipWithIndex.map {
-                case (<li>{ nodes @ _* }</li>, i) => "\n " + i + " " + dump(nodes) + "\n"
-                case (node, i)                    => dump(node)
+                case (<li>{ nodes @ _* }</li>, i) => 
+                    "\n " + i + " " + dump(nodes) + "\n"
+                case (node, i)                    => 
+                    dump(node)
             } mkString
 
             case xml.Text(t) => t
@@ -111,13 +113,13 @@ class Html2Ascii(page: scala.xml.NodeSeq) {
                 _, label, _, _, nodes @ _*
                 ) if discard contains label => ""
 
-            case xml.Elem(_, label, _, _, nodes @ _*) =>
-                "== " + label + "==\n" + dump(nodes) + "\n"
+            case xml.Elem(_, label, _, _, nodes @ _*) => (
+                if (debug) "== " + label + "==\n" else ""
+            ) + dump(nodes) + "\n"
 
-            case x => 
-                 println("Html2Ascii unknown: %s %s", x.label, x); 
-                 ""
+            case x =>
+                println("Html2Ascii unknown: %s %s", x.label, x);
+                ""
         }) mkString
     }
-
 }

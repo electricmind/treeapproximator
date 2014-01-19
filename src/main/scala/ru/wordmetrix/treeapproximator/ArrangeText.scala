@@ -53,8 +53,8 @@ object ArrangeText extends App {
             case "links" =>
                 new ArrangeTextDumpHTML(arrangetext, cfg.f2u match {
                     case CFG.F2U.Simple => new File2URITransform()
-                    case CFG.F2U.Map => new File2URIMap()
-                    case CFG.F2U.Dump => new File2URIDump()
+                    case CFG.F2U.Map    => new File2URIMap()
+                    case CFG.F2U.Dump   => new File2URIDump()
                 }).dump()
 
             case "all" =>
@@ -82,7 +82,6 @@ abstract class ArrangeTextDump(arrangetree: ArrangeText)(implicit cfg: CFG) {
     implicit def vectors2Vectors(v: Vector[Word]): Vector[String] = Vector(v.map {
         case (x, y) => (arrangetree.index.rmap.getOrElse(x, "unknown" /*"Word is unknown or index possibly is old"*/ ) -> y)
     } toList)
-
 }
 
 class ArrangeText()(implicit cfg: CFG) {
@@ -93,21 +92,35 @@ class ArrangeText()(implicit cfg: CFG) {
 
     val start_time = System.currentTimeMillis()
 
-    lazy val tree: Tree = vectors.zipWithIndex.foldLeft(TreeApproximator[Word, File]())({
-        case (tree, ((vector, file), n)) => debug.time("%s %d %s tree(%s).energy => %4.3f, length = %d / %d".format(
+    def tree_raw: Tree = vectors.zipWithIndex.foldLeft(TreeApproximator[Word, File]())({
+        case (tree, ((vector, file), n)) => log.time("%s %d %s tree(%s).energy => %4.3f, length = %d / %d".format(
             (System.currentTimeMillis() - start_time),
             tree.n,
             index.map.size,
             file,
             tree.energy2,
             vector.size,
-            tree.average.size)) {
+            tree.average.size)
+        ) {
             if (n % 100 == 0) System.gc()
-
-            (tree + (vector, file)).rectify(2)
-
+            (tree + (vector, file)).rectify(cfg.rectify_inline)
         }
     })
+
+    def tree_opt: Tree = (1 to cfg.rectify).foldLeft(tree_raw)({
+        case (tree, n) =>
+            log.time("Rectifying #%3d = %4.3f %d".format(
+                n, tree.energy2, tree.average.size)
+            ) {
+                tree.rectify(tree.n)
+            } 
+    })
+
+    def tree_aligned = (cfg.path / "tree.dat") cache {
+        tree_opt.align()._1
+    }
+
+    lazy val tree: Tree = tree_aligned
 
     lazy val (vectors, index) = sample(
         for {
@@ -119,27 +132,8 @@ class ArrangeText()(implicit cfg: CFG) {
 
     lazy val clusters: Iterable[Iterable[Vector[Word]]] =
         debug.time("clustering") {
-            Clusters(tree)
+            Clusters(tree_aligned)
         }
-
-    lazy val clusters1 =
-        debug.time("clustering") {
-            Clusters(tree)
-        }
-
-    def tree_opt = (1 to 5).foldLeft(tree)({
-        case (tree, n) =>
-            debug.time("Rectifying #%3d = %4.3f %d".format(
-                n, tree.energy2, tree.average.size)
-            ) {
-                tree.rectify(tree.n)
-            }
-    })
-
-    def tree_aligned = (cfg.path / "tree.dat") cache {
-        val tree = tree_opt.align()._1
-        tree
-    }
 
     case class String2Word(val map: Map[String, Int] = Map(),
                            val rmap: Map[Int, String] = Map(),
@@ -183,7 +177,7 @@ class ArrangeText()(implicit cfg: CFG) {
                 ) {
                         case ((map, index), (x, y)) =>
                             index.update(x) match {
-                                case (n,index) => (map + (n -> y), index)
+                                case (n, index) => (map + (n -> y), index)
                             }
                     }
 

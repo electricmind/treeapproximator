@@ -49,9 +49,16 @@ object CFG {
         case rkey("servers") :: value :: list =>
             apply(list, cfg.copy(servers = value.toInt), seeds)
 
+        case rkey("rectify") :: value :: list =>
+            apply(list, cfg.copy(rectify = value.toInt), seeds)
+
+        case rkey("rectify_inline") :: value :: list =>
+            apply(list, cfg.copy(rectify_inline = value.toInt), seeds)
+
         case rkey("wordlen") :: value :: list =>
             apply(list, cfg.copy(wordlen = value.toInt), seeds)
 
+            
         case rkey("wordfreq") :: value :: list =>
             apply(list, cfg.copy(wordfreq = value.toInt), seeds)
 
@@ -61,8 +68,12 @@ object CFG {
         case rkey("prioriting") :: value :: list =>
             apply(list, cfg.copy(prioriting = value.toDouble), seeds)
 
+        
         case rkey("targets") :: value :: list =>
             apply(list, cfg.copy(targets = value.toInt), seeds)
+
+        case rkey("central") ::  path :: list =>
+            apply(list, cfg.copy(central = Option(new File(path))), seeds)
 
         case rkey("sampling") :: path :: list =>
             apply(list, cfg.copy(sampling = new File(path)), seeds)
@@ -104,9 +115,12 @@ case class CFG(
         val path: File = new File("/tmp/webcrawler"),
         val sampling: File = new File("sampling.lst"),
         val map: File = new File("map.lst"),
+        val central: Option[File] = None,
         val isdebug: Boolean = false,
         val ish2p: Boolean = false,
         val servers: Int = 2,
+        val rectify :Int = 5,
+        val rectify_inline :Int = 2,
         val targeting: Double = 0.01,
         val prioriting: Double = 0.9,
         val targets: Int = 9,
@@ -120,6 +134,7 @@ case class CFG(
 
     lazy val seeds = args.map(x => new URI(x))
     lazy val files = args.map(x => new File(x))
+    lazy val target = central getOrElse files.head
 }
 
 object debug {
@@ -151,6 +166,14 @@ object log {
     def apply(actor: CFGAware, format: String, p: Any*)(implicit cfg: CFG) = {
         println({ if (cfg.isdebug) "* " else "" } + "- %20s: ".format(actor.name.slice(0, 20)) + format.format(p: _*))
     }
+    
+    def time[B](s: String)(f: => B)(implicit cfg: CFG): B = {
+        val t = System.currentTimeMillis()
+        val outcome = f
+        apply("%s", "%s : time %d".format(s, (System.currentTimeMillis() - t) / 1))
+        outcome
+    }
+
 }
 
 trait CFGAware {
