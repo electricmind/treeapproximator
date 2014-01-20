@@ -1,26 +1,25 @@
 package ru.wordmetrix.treeapproximator
 
-import java.io.File
-import scala.xml.Unparsed
+import java.io.{ File, FileInputStream }
+import java.net.URI
 import scala.Array.canBuildFrom
 import scala.Option.option2Iterable
 import scala.collection.TraversableOnce.flattenTraversableOnce
-import scala.util.Random
+import scala.util.{ Success, Try }
+import scala.util.Failure
 import scala.xml.{ Text, Unparsed }
+import scala.xml.{ Text, Unparsed }
+import scala.xml.NodeSeq.seqToNodeSeq
+import scala.xml.parsing.NoBindingFactoryAdapter
 import ru.wordmetrix.smartfile.SmartFile.{ fromFile, fromString, toFile }
-import ru.wordmetrix.treeapproximator.TreeApproximator.{ Leaf, Node, Tree }
+import ru.wordmetrix.treeapproximator.TreeApproximator.Node
 import ru.wordmetrix.utils.CFG
 import ru.wordmetrix.utils.Use.anyToUse
-import ru.wordmetrix.utils.debug
-import ru.wordmetrix.vector.Vector
-import ru.wordmetrix.utils.CFG
-import java.net.URI
-import sun.misc.BASE64Encoder
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
-import scala.util.Success
 import ru.wordmetrix.utils.log
+import ru.wordmetrix.vector.Vector
+import sun.misc.BASE64Encoder
+import org.xml.sax.InputSource
+import org.ccil.cowan.tagsoup.jaxp.SAXFactoryImpl
 
 class ArrangeTextDumpHTML[U <: File2URIBase](val arrangetree: ArrangeText,
                                              f2uri: U)(implicit cfg: CFG)
@@ -31,7 +30,7 @@ class ArrangeTextDumpHTML[U <: File2URIBase](val arrangetree: ArrangeText,
     val average = arrangetree.tree.average.normal
     val clusters = arrangetree.clusters.zipWithIndex.toList
     val index = arrangetree.index
-    val central : File = cfg.target
+    val central: File = cfg.target
 
     def dump() = {
         path / "index.html" write xml(central).toString
@@ -44,12 +43,21 @@ class ArrangeTextDumpHTML[U <: File2URIBase](val arrangetree: ArrangeText,
             _.replace("_", " ")
         } mkString ("")
 
-        file.readLines()
-            .toList.map(_.trim)
-            .dropWhile(_ == "")
-            .headOption
-            .getOrElse(name1)
-
+        if (cfg.ishtml) {
+            (new NoBindingFactoryAdapter).loadXML(
+                new InputSource(new FileInputStream(file)),
+                new SAXFactoryImpl().newSAXParser()
+            ) \\ "title" headOption match {
+                case Some(<title>{ title @ _* }</title>) => title
+                case _                                   => ""
+            }
+        } else {
+            file.readLines()
+                .toList.map(_.trim)
+                .dropWhile(_ == "")
+                .headOption
+                .getOrElse(name1)
+        }
     }
 
     def xml(central: File) = {
@@ -243,11 +251,17 @@ class File2URIMap()(implicit cfg: CFG) extends File2URIBase {
 
 class File2URIDump()(implicit cfg: CFG) extends File2URIBase {
     def get(f: File): Option[URI] = Try(
-        new URI(
-            "data:text/html;base64," + new BASE64Encoder().encode((<pre> {
-                f.readLines().mkString("\n")
-            } </pre>).toString.getBytes()).split("\n").mkString("")
-        )
+        new URI({
+            val text = f.readLines().mkString("\n")
+            "data:text/html;base64," + new BASE64Encoder().encode((
+                if (cfg.ishtml)
+                    text
+                else
+                    <pre> { text } </pre>
+            ).toString.getBytes()
+
+            ).split("\n").mkString("")
+        })
     ) match {
             case fail @ Failure(x) =>
                 log("Read %s error: %s", f, x)
