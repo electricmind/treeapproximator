@@ -74,7 +74,6 @@ object ArrangeText extends App {
 }
 
 abstract class ArrangeTextDump(arrangetree: ArrangeText)(implicit cfg: CFG) {
-
     def vector2Title(v: Vector[String], n: Int = 5, stopword: Set[String] = Set(" ")) = {
         v.toList.sortBy(-_._2).takeWhile(_._2 > 0d).map(_._1).filterNot(stopword).filterNot(Set(" ", "")).take(n).mkString(" ")
     }
