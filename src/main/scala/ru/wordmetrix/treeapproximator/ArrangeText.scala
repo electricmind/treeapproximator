@@ -12,11 +12,12 @@ import ru.wordmetrix.utils.CFG
 import ru.wordmetrix.utils.Use.anyToUse
 import ru.wordmetrix.utils.debug
 import ru.wordmetrix.vector.Vector
-
 import scala.util.matching.Regex
 import scala.util.Try
 import ru.wordmetrix.utils._
 import scala.annotation.tailrec
+import ru.wordmetrix.features.Features.String2Word
+import ru.wordmetrix.features.Features
 
 /**
  *  ArrangeText is a strategy that places a bunch of text in convenient fashion.
@@ -134,23 +135,23 @@ class ArrangeText()(implicit cfg: CFG) {
             Clusters(tree_aligned)
         }
 
-    case class String2Word(val map: Map[String, Int] = Map(),
-                           val rmap: Map[Int, String] = Map(),
-                           n: Int = 0) {
-        def update(word: String) = {
-
-            map.get(word) match {
-                case Some(x) => (x, this)
-                case None =>
-                    val x = n + 1
-                    (x, copy(
-                        map = map + (word -> x),
-                        rmap = rmap + (x -> word),
-                        x))
-            }
-
-        }
-    }
+//    case class String2Word(val map: Map[String, Int] = Map(),
+//                           val rmap: Map[Int, String] = Map(),
+//                           n: Int = 0) {
+//        def update(word: String) = {
+//
+//            map.get(word) match {
+//                case Some(x) => (x, this)
+//                case None =>
+//                    val x = n + 1
+//                    (x, copy(
+//                        map = map + (word -> x),
+//                        rmap = rmap + (x -> word),
+//                        x))
+//            }
+//
+//        }
+//    }
 
     val delimiter: Regex = """\W+""".r
 
@@ -158,28 +159,29 @@ class ArrangeText()(implicit cfg: CFG) {
     private def sample(
         files: List[(String, File)],
         vectors: List[(Vector[Word], File)],
-        index: String2Word): (List[(Vector[Word], File)], String2Word) =
+        index: String2Word[String, Double]): (List[(Vector[Word], File)], String2Word[String, Double]) =
         files match {
             case (s, file) :: files =>
-                val countwords = for {
-                    (x, ys) <- (for {
-                        word <- delimiter.split(s)
-                        if word.length > cfg.wordlen
-                    } yield word).groupBy(x => x.toLowerCase())
-
-                    y <- Some(ys.toList.length.toDouble)
-                    if y > cfg.wordfreq
-                } yield { x -> y }
-
-                val (countids, index1) = countwords.foldLeft(
-                    Map[Word, Double](), index
-                ) {
-                        case ((map, index), (x, y)) =>
-                            index.update(x) match {
-                                case (n, index) => (map + (n -> y), index)
-                            }
-                    }
-
+                  val (countids, index1) = Features.fromText(s,index)
+//                val countwords = for {
+//                    (x, ys) <- (for {
+//                        word <- delimiter.split(s)
+//                        if word.length > cfg.wordlen
+//                    } yield word).groupBy(x => x.toLowerCase())
+//
+//                    y <- Some(ys.toList.length.toDouble)
+//                    if y > cfg.wordfreq
+//                } yield { x -> y }
+//
+//                val (countids, index1) = countwords.foldLeft(
+//                    Map[Word, Double](), index
+//                ) {
+//                        case ((map, index), (x, y)) =>
+//                            index.update(x) match {
+//                                case (n, index) => (map + (n -> y), index)
+//                            }
+//                    }
+//
                 sample(
                     files,
                     (Vector(countids.toList), file) :: vectors,
