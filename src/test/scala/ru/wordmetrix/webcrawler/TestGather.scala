@@ -63,7 +63,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 expectMsg(GatherSeeds(
                     uri(1),
                     Set(uri(1), uri(2), uri(3)),
-                    Vector("test" -> 15.0))
+                    Vector(1 -> 15.0))
                 )
 
                 // Return text
@@ -91,7 +91,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 expectMsg(GatherSeeds(
                     uri(1),
                     Set(uri(1), uri(2), uri(3)),
-                    Vector("test" -> 15.0))
+                    Vector(1 -> 15.0))
                 )
 
                 // Return text
@@ -158,7 +158,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             expectMsg(GatherSeeds(
                 uri(1),
                 Set(uri(1), uri(2), uri(3)),
-                Vector("test" -> 15.0))
+                Vector(1 -> 15.0))
             )
             storage.expectMsg(GatherIntel(uri(1), text(1)))
 
@@ -184,7 +184,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             expectMsg(GatherSeeds(
                 uri(2),
                 Set(),
-                Vector("test" -> 15.0))
+                Vector(1 -> 15.0))
             )
 
             storage.expectMsg(GatherIntel(uri(2), text(1)))
