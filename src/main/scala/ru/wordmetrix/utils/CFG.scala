@@ -52,6 +52,9 @@ object CFG {
         case rkey("rectify") :: value :: list =>
             apply(list, cfg.copy(rectify = value.toInt), seeds)
 
+        case rkey("ishtml") :: list =>
+            apply(list, cfg.copy(ishtml = true), seeds)
+
         case rkey("rectify_inline") :: value :: list =>
             apply(list, cfg.copy(rectify_inline = value.toInt), seeds)
 
@@ -118,6 +121,7 @@ case class CFG(
         val central: Option[File] = None,
         val isdebug: Boolean = false,
         val ish2p: Boolean = false,
+        val ishtml: Boolean = false,
         val servers: Int = 2,
         val rectify :Int = 5,
         val rectify_inline :Int = 2,

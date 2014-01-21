@@ -113,7 +113,7 @@ class ArrangeText()(implicit cfg: CFG) {
                 n, tree.energy2, tree.average.size)
             ) {
                 tree.rectify(tree.n)
-            } 
+            }
     })
 
     def tree_aligned = (cfg.path / "tree.dat") cache {
@@ -126,7 +126,10 @@ class ArrangeText()(implicit cfg: CFG) {
         for {
             file <- scala.util.Random.shuffle(cfg.files)
             page <- Try(file.readLines().mkString(" ")).toOption
-        } yield (page, file),
+        } yield (
+            if (cfg.ishtml) new Html2Ascii(page).wrap(72) else page,
+            file
+        ),
         List(), String2Word()
     )
 
