@@ -1,13 +1,12 @@
 package ru.wordmetrix.treeapproximator
 import ru.wordmetrix.vector._
-import ru.wordmetrix.utils.Use._
  
 import Clusters._
 
 class Cluster[F](val vector: V[Vector[F]],
                  val squares: Double = 0d) extends Iterable[Vector[F]] {
     def iterator = vector.iterator
-
+ 
     def this(vector: V[Vector[F]]) = this(
         vector.toVector,
          average(pairs(vector).map({ case (x, y) => (x - y).sqr }).toVector)

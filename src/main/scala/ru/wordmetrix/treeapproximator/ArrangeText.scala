@@ -109,15 +109,17 @@ class ArrangeText()(implicit cfg: CFG) {
 
     def tree_opt: Tree = (1 to cfg.rectify).foldLeft(tree_raw)({
         case (tree, n) =>
-            log.time("Rectifying #%3d = %4.3f %d".format(
-                n, tree.energy2, tree.average.size)
+            log.time("Rectifying #%3d = %4.3f %d, size = %s".format(
+                n, tree.energy2, tree.average.size, tree.toList.length)
             ) {
                 tree.rectify(tree.n)
             }
     })
 
     def tree_aligned = (cfg.path / "tree.dat") cache {
-        tree_opt.align()._1
+        val q = tree_opt.align()._1
+        debug("tree_algigned size = %s", q.toList.length)
+        q
     }
 
     lazy val tree: Tree = tree_aligned
@@ -131,11 +133,27 @@ class ArrangeText()(implicit cfg: CFG) {
             file
         ),
         List(), String2Word()
-    )
+    ) match {
+        case (vectors, index) =>
+            val (empties, substantative) = vectors.partition({
+                case (vs,filename) => vs.size == 0
+            })
+            
+            debug("%s was rejected as empty", empties.size)
+            
+            if (cfg.isdebug) empties foreach {
+                case (v,file) => debug("Splitter reduces %s to ashes",file)
+            }
+            (substantative, index)
+    }
 
     lazy val clusters: Iterable[Iterable[Vector[Word]]] =
         debug.time("clustering") {
-            Clusters(tree_aligned)
+            debug("Size tree: %s", tree.toList.size)
+            val c = Clusters(tree_aligned)
+            debug("clusters %s %s %s",c.size,c.iterator.toList.flatten.size,
+                    c.heads.toList.map({case (x,y) => y}).flatten.size)
+            c
         }
 
 //    case class String2Word(val map: Map[String, Int] = Map(),
