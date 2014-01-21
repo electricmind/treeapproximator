@@ -1,13 +1,10 @@
 package ru.wordmetrix.treeapproximator
 
 import ru.wordmetrix.vector.Vector
-import scala.Option.option2Iterable
 
-import scala.collection.TraversableOnce.flattenTraversableOnce
 object Clusters {
     type V[V] = scala.collection.immutable.Vector[V]
-    def V = scala.collection.immutable.Vector
-
+   
     type Item[F, V] = (Vector[F], V)
     type Pair[F, V] = (Item[F, V], Item[F, V])
 
