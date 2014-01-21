@@ -133,10 +133,23 @@ class ArrangeText()(implicit cfg: CFG) {
             file
         ),
         List(), String2Word()
-    )
+    ) match {
+        case (vectors, index) =>
+            val (empties, substantative) = vectors.partition({
+                case (vs,filename) => vs.size == 0
+            })
+            
+            debug("%s was rejected as empty", empties.size)
+            
+            if (cfg.isdebug) empties foreach {
+                case (v,file) => debug("Splitter reduces %s to ashes",file)
+            }
+            (substantative, index)
+    }
 
     lazy val clusters: Iterable[Iterable[Vector[Word]]] =
         debug.time("clustering") {
+            debug("Size tree: %s", tree.toList.size)
             val c = Clusters(tree_aligned)
             debug("clusters %s %s %s",c.size,c.iterator.toList.flatten.size,
                     c.heads.toList.map({case (x,y) => y}).flatten.size)

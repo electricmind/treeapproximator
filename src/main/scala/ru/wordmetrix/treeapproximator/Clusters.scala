@@ -4,15 +4,19 @@ import ru.wordmetrix.vector.Vector
 
 object Clusters {
     type V[V] = scala.collection.immutable.Vector[V]
-   
+
     type Item[F, V] = (Vector[F], V)
     type Pair[F, V] = (Item[F, V], Item[F, V])
 
     private def fromPairs[F, V](pairs: Iterable[Pair[F, V]]) = pairs.foldLeft(new Clusters[F]()) {
         case (cs, ((v1, va1), (v2, va2))) if v1 != v2 =>
-            cs + (v1, v2)
-            
+            val c = cs + (v1, v2)
+            /*printf("clusters %s %s %s\n", c.size, c.iterator.toList.flatten.size,
+                c.heads.toList.map({ case (x, y) => y }).flatten.size)
+ */           c
+
         case (cs, ((v1, va1), (v2, va2))) =>
+            //printf("clusters the same")
             cs
 
     }
@@ -23,17 +27,19 @@ object Clusters {
 
     def apply[F](chain: Seq[Vector[F]]): Clusters[F] = apply(chain.zipWithIndex)
 
-    def pairs[F, V](tree: Iterable[(Vector[F], V)]) =  (tree.foldLeft((Set[Vector[F]](),List[(Vector[F], V)]())) {
-            case ((set,list),(k,v)) => if (set contains k) (set, list) else {
-                (set + k, (k,v) :: list)
-            }
-        })._2.reverse.sliding(2).map({
-            case (v1, value1) :: (v2, value2) :: _ =>
-                Some(((v1 - v2).sqr, ((v1, value1), (v2, value2))))
-            case _ => None
-        }).flatten.toList.sortBy(_._1).map(_._2).toSeq
-    
-    
+    def pairs[F, V](tree: Iterable[(Vector[F], V)]) = (tree.foldLeft((Set[Vector[F]](), List[(Vector[F], V)]())) {
+        case ((set, list), (k, v)) => if (set contains k) {
+            //printf("already seen %s\n",k)
+            (set, list) 
+        } else {
+            (set + k, (k, v) :: list)
+        }
+    })._2.reverse.sliding(2).map({
+        case (v1, value1) :: (v2, value2) :: _ =>
+            Some(((v1 - v2).sqr, ((v1, value1), (v2, value2))))
+        case _ => None
+    }).flatten.toList.sortBy(_._1).map(_._2).toSeq
+
     def pairs[F](vectors: Seq[Vector[F]]) = {
         vectors.sliding(2).filter(_.length == 2).map {
             case scala.collection.immutable.Vector(v1, v2) => (v1, v2)
@@ -64,7 +70,7 @@ class Clusters[F](
                 (Some(heads(start)), starts)) {
                     case (Some(c), starts) =>
                         joinheads.get(c.last) match {
-                            case Some(v) => 
+                            case Some(v) =>
                                 heads.get(v) match {
                                     case Some(v) =>
                                         (Some(v), starts)
@@ -125,7 +131,7 @@ class Clusters[F](
                 }
 
             case (None, Some(c2)) =>
-                
+
                 (c2 :+ v2) match {
                     case c => new Clusters(
                         heads + (c.head -> c),
@@ -136,7 +142,7 @@ class Clusters[F](
                 }
 
             case (None, None) =>
-                
+
                 new Cluster(v1, v2) match {
                     case c => new Clusters(
                         heads + (v1 -> c),
