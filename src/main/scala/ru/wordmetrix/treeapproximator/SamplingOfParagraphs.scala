@@ -31,7 +31,7 @@ object SamplingOfParagraphs extends App {
                 s"${file.getPath().split("/").toList.last}.%03d.txt".format(n))
                 .write(s"page $n\n" + paragraph.mkString("\n") + "\n")
 
-        def output(lines: List[String], n: Int): Unit = if (n < 1000) lines match {
+        def output(lines: List[String], n: Int): Unit = if (n < 10000) lines match {
             case List() =>
 
             case list =>
