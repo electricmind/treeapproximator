@@ -134,25 +134,48 @@ class ArrangeText()(implicit cfg: CFG) {
         ),
         Stream(), String2Word()
     ) match {
-        case (vectors, index) =>
-            val (empties, substantative) = vectors.partition({
-                case (vs,filename) => vs.size == 0
-            })
-            
-            log("%s was rejected as empty", empties.size)
-            
-            if (cfg.isdebug) empties.foreach {
-                case (v,file) => debug("Splitter reduces %s to ashes",file)
-            }
-            (substantative, index)
-    }
+            case (vectors, index) =>
+                val (empties, substantative) = vectors.partition({
+                    case (vs, filename) => vs.size == 0
+                })
+
+                if (empties.size > 0)
+                    log("%s was rejected as empty", empties.size)
+
+                if (cfg.isdebug) empties.foreach {
+                    case (v, file) => debug("Splitter reduces %s to ashes", file)
+                }
+
+                val uniq = substantative.toMap
+
+                debug("%s uniq vectors", uniq.size)
+
+                if (uniq.size != substantative.size) {
+                    log("%s duplicates were rejected",
+                        substantative.size - uniq.size)
+                        
+                    if (cfg.isdebug)
+                        substantative.filter({
+                            case (v, f) => uniq.get(v) match {
+                                case Some(`f`) => false
+                                case _         => true
+                            }
+                        }
+                        ) foreach {
+                            case (v, f) =>
+                                debug("%s is the same as %s", f, uniq(v))
+                        }
+                }
+
+                (uniq.toStream, index)
+        }
 
     lazy val clusters: Iterable[Iterable[Vector[Word]]] =
         debug.time("clustering") {
             debug("Size tree: %s", tree.toList.size)
             val c = Clusters(tree_aligned)
-            debug("clusters %s %s %s",c.size,c.iterator.toList.flatten.size,
-                    c.heads.toList.map({case (x,y) => y}).flatten.size)
+            debug("clusters %s %s %s", c.size, c.iterator.toList.flatten.size,
+                c.heads.toList.map({ case (x, y) => y }).flatten.size)
             c
         }
 
@@ -165,7 +188,7 @@ class ArrangeText()(implicit cfg: CFG) {
         index: String2Word[String, Double]): (Stream[(Vector[Word], File)], String2Word[String, Double]) =
         files match {
             case (s, file) #:: files =>
-                  val (countids, index1) = Features.fromText(s,index)
+                val (countids, index1) = Features.fromText(s, index)
                 sample(
                     files,
                     (Vector(countids.toList), file) #:: vectors,
