@@ -9,8 +9,17 @@ import ru.wordmetrix.smartfile.SmartFile.fromFile
 import scala.concurrent.Await
 import scala.concurrent._
 import scala.concurrent.duration._
+/**
+ * An utility that prepares a sample of short text fragments.
+ *
+ * This utility downloads a text from given URL's and split it on
+ * strings that comply with a pattern.
+ *
+ * @author Elec
+ * @usage SamplingOfSections [ -regexp <REGEXP> ] { <URI> }+ [<Path to store>]
+ */
 
-object SamplingOfParagraphs extends App {
+object SamplingOfSections extends App {
     override def main(args: Array[String]) {
         val (regexp, files, path) = (args match {
 
@@ -19,7 +28,7 @@ object SamplingOfParagraphs extends App {
             case Array("-mark", mark, args @ _*) =>
                 (s".+$mark.+".r, args)
 
-            case Array(args @ _*)                    => ("^\\s*$".r, args)
+            case Array(args @ _*) => ("^\\s*$".r, args)
 
         }) match {
             case (regexp, Seq(file, files @ _*)) => (regexp,
@@ -30,7 +39,8 @@ object SamplingOfParagraphs extends App {
                 })
             case _ =>
                 printf("Enter "
-                    + "SamplingOfParagraphs [-mark <Mark>] <uri> [<path>]\n")
+                    + "SamplingOfParagraphs [-mark <Mark> | -regexp <Regexp>]"
+                    + " { <uri> }+ [ <path> ]\n" )
                 sys.exit
                 (null, null, null)
         }

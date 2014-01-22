@@ -6,8 +6,9 @@ package ru.wordmetrix.treeapproximator
  * slices 100 lines long.
  *
  * @author Elec
- * @usage SamplingOfSegments <URI> [<Path to store>]
+ * @usage SamplingOfSegments { <URI> }+ [<Path to store>]
  */
+
 import java.io.{ File, InputStream }
 import java.net.URI
 
@@ -23,7 +24,7 @@ object SamplingOfSegments extends App {
     override def main(args: Array[String]) {
         val (files, path) = (args match {
             case Array() =>
-                printf("Enter SamplingOfSegments <uri> [<path>]\n")
+                printf("Enter SamplingOfSegments { <uri> }+ [ <path> ]\n")
                 sys.exit
                 (null, null)
             case Array(file)             => (List(file), ".")
