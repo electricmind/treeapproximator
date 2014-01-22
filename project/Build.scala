@@ -7,9 +7,9 @@ object WebCrawlerBuild extends Build {
                             base = file("."),
                             settings = Project.defaultSettings 
     ).dependsOn(
-      smartfile
+      utils
     )
 
-    lazy val smartfile  = RootProject(uri("https://github.com/electricmind/smartfile.git"))
+    lazy val utils  = RootProject(uri("https://github.com/electricmind/utils.git"))
 }
 
