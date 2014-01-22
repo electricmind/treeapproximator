@@ -12,40 +12,40 @@ import scala.concurrent.duration._
 
 object SamplingOfParagraphs extends App {
     override def main(args: Array[String]) {
-        val (regexp, file, path) = (args match {
-            case Array("-regexp", regexp, file) => (regexp.r, file, ".")
+        val (regexp, files, path) = (args match {
 
-            case Array("-mark", mark, file) =>
-                (s".+$mark.+".r, file, ".")
+            case Array("-regexp", regexp, args @ _*) => (regexp.r, args)
 
-            case Array(file)                          => ("^\\s+$".r, file, ".")
+            case Array("-mark", mark, args @ _*) =>
+                (s".+$mark.+".r, args)
 
-            case Array("-regexp", regexp, file, path) => (regexp.r, file, path)
+            case Array(args @ _*)                    => ("^\\s*$".r, args)
 
-            case Array("-mark", mark, file, path) =>
-                (s".+$mark.+".r, file, path)
-
-            case Array(file, path) => ("^\\s+$".r, file, path)
-
+        }) match {
+            case (regexp, Seq(file, files @ _*)) => (regexp,
+                (file :: files.toList.dropRight(1)).map(new URI(_)),
+                files.lastOption match {
+                    case Some(x) => new File(x)
+                    case None    => new File(".")
+                })
             case _ =>
                 printf("Enter "
                     + "SamplingOfParagraphs [-mark <Mark>] <uri> [<path>]\n")
                 sys.exit
                 (null, null, null)
-
-        }) match {
-            case (regexp, file, path) => (regexp, new URI(file), new File(path))
         }
 
-        def write(paragraph: List[String], n: Int) = if (paragraph.length > 10)
-            (path /
-                s"${file.getPath().split("/").toList.last}.%04d.txt".format(n))
-                .write(s"$n : ${file.getPath().split("/").toList.last} : "
-                    + paragraph.mkString("\n") + "\n")
+        def write(paragraph: List[String], n: Int, name: String) =
+            if (paragraph.length > 10)
+                (path /
+                    s"${name}.%04d.txt".format(n))
+                    .write(s"$n : ${name} : "
+                        + paragraph.mkString("\n") + "\n")
 
-        def output(lines: List[String], n: Int): Unit = if (n < 10000)
+        def output(lines: List[String], n: Int, name: String): Unit = if (n < 10000)
             lines match {
-                case paragraph @ line :: List() => write(paragraph, n)
+                case paragraph @ line :: List() =>
+                    write(paragraph, n, name)
 
                 case line :: lines =>
                     println(line)
@@ -53,23 +53,25 @@ object SamplingOfParagraphs extends App {
                         case (List(), List()) =>
 
                         case (paragraph @ List(_@ _*), lines) =>
-                            write(line :: paragraph, n)
-                            output(lines, n + 1)
+                            write(line :: paragraph, n, name)
+                            output(lines, n + 1, name)
                     }
 
             }
 
-        val end = for {
-            content <- Future(file.toURL.getContent())
-            lines <- content match {
-                case content: InputStream =>
-                    Future(io.Source.fromInputStream(content).getLines.toList)
-                case _ =>
-                    Future.failed(new Exception("Invalid data type"))
+        val end = Future.sequence(files.map { file =>
+            for {
+                content <- Future(file.toURL.getContent())
+                lines <- content match {
+                    case content: InputStream =>
+                        Future(io.Source.fromInputStream(content).getLines.toList)
+                    case _ =>
+                        Future.failed(new Exception("Invalid data type"))
+                }
+            } yield {
+                output(lines, 1, file.getPath().split("/").toList.last)
             }
-        } yield {
-            output(lines, 1)
-        }
+        })
 
         Await.ready(end, 1 minute)
     }
