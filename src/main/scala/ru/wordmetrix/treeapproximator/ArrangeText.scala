@@ -126,22 +126,22 @@ class ArrangeText()(implicit cfg: CFG) {
 
     lazy val (vectors, index) = sample(
         for {
-            file <- scala.util.Random.shuffle(cfg.files)
+            file <- scala.util.Random.shuffle(cfg.files).toStream
             page <- Try(file.readLines().mkString(" ")).toOption
         } yield (
             if (cfg.ishtml) new Html2Ascii(page).wrap(72) else page,
             file
         ),
-        List(), String2Word()
+        Stream(), String2Word()
     ) match {
         case (vectors, index) =>
             val (empties, substantative) = vectors.partition({
                 case (vs,filename) => vs.size == 0
             })
             
-            debug("%s was rejected as empty", empties.size)
+            log("%s was rejected as empty", empties.size)
             
-            if (cfg.isdebug) empties foreach {
+            if (cfg.isdebug) empties.foreach {
                 case (v,file) => debug("Splitter reduces %s to ashes",file)
             }
             (substantative, index)
@@ -156,59 +156,22 @@ class ArrangeText()(implicit cfg: CFG) {
             c
         }
 
-//    case class String2Word(val map: Map[String, Int] = Map(),
-//                           val rmap: Map[Int, String] = Map(),
-//                           n: Int = 0) {
-//        def update(word: String) = {
-//
-//            map.get(word) match {
-//                case Some(x) => (x, this)
-//                case None =>
-//                    val x = n + 1
-//                    (x, copy(
-//                        map = map + (word -> x),
-//                        rmap = rmap + (x -> word),
-//                        x))
-//            }
-//
-//        }
-//    }
-
     val delimiter: Regex = """\W+""".r
 
     @tailrec
     private def sample(
-        files: List[(String, File)],
-        vectors: List[(Vector[Word], File)],
-        index: String2Word[String, Double]): (List[(Vector[Word], File)], String2Word[String, Double]) =
+        files: Stream[(String, File)],
+        vectors: Stream[(Vector[Word], File)],
+        index: String2Word[String, Double]): (Stream[(Vector[Word], File)], String2Word[String, Double]) =
         files match {
-            case (s, file) :: files =>
+            case (s, file) #:: files =>
                   val (countids, index1) = Features.fromText(s,index)
-//                val countwords = for {
-//                    (x, ys) <- (for {
-//                        word <- delimiter.split(s)
-//                        if word.length > cfg.wordlen
-//                    } yield word).groupBy(x => x.toLowerCase())
-//
-//                    y <- Some(ys.toList.length.toDouble)
-//                    if y > cfg.wordfreq
-//                } yield { x -> y }
-//
-//                val (countids, index1) = countwords.foldLeft(
-//                    Map[Word, Double](), index
-//                ) {
-//                        case ((map, index), (x, y)) =>
-//                            index.update(x) match {
-//                                case (n, index) => (map + (n -> y), index)
-//                            }
-//                    }
-//
                 sample(
                     files,
-                    (Vector(countids.toList), file) :: vectors,
+                    (Vector(countids.toList), file) #:: vectors,
                     index1
 
                 )
-            case List() => (vectors, index)
+            case Stream() => (vectors, index)
         }
 }
