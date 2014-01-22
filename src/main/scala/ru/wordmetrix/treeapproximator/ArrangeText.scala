@@ -124,7 +124,9 @@ class ArrangeText()(implicit cfg: CFG) {
 
     lazy val tree: Tree = tree_aligned
 
-    lazy val (vectors, index) = sample(
+    lazy val index = cfg.path / "index.dat" cache index_uncached
+    
+    lazy val (vectors, index_uncached) = sample(
         for {
             file <- scala.util.Random.shuffle(cfg.files).toStream
             page <- Try(file.readLines().mkString(" ")).toOption
@@ -167,7 +169,7 @@ class ArrangeText()(implicit cfg: CFG) {
                         }
                 }
 
-                (uniq.toStream, index)
+                (uniq.toStream,  index)
         }
 
     lazy val clusters: Iterable[Iterable[Vector[Word]]] =
