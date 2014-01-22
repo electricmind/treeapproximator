@@ -58,3 +58,5 @@ Version 1.2, 20140122, Move libraries out, implement ArrangeText as independent 
 
 
 
+
+
