@@ -1,6 +1,6 @@
-package test
+package ru.wordmetrix.treeapproximator
+
 import org.scalatest.FlatSpec
-import ru.wordmetrix.treeapproximator.TreeApproximator
 import ru.wordmetrix.vector.Vector
 import org.scalatest.Matchers
 import java.net.{URL,URI}
@@ -8,10 +8,9 @@ import scala.util.Random.{ nextBoolean, nextGaussian }
 import Math.abs
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import ru.wordmetrix.treeapproximator.{Cluster, Clusters}
 
 //@RunWith(classOf[JUnitRunner])
-class testCluster extends FlatSpec with Matchers {
+class TestCluster extends FlatSpec with Matchers {
 // TODO: Move test vectors and clouds into separate file
     val v1 = Vector(1 -> 1, 4 -> 0)
     val v10 = Vector(1 -> 0, 4 -> 1)
