@@ -190,7 +190,7 @@ class ArrangeTextDumpHTML[U <: File2URIBase](val arrangetree: ArrangeText,
                                 case (vs, i) =>
                                     <div id={ "keyword" + i } class="ui-helper-hidden keyword">
                                         {
-                                            vs.reduce(_ + _).self.sortBy(-_._2).takeWhile(_._2 > 0).take(100).map(x => {
+                                            vs.reduce(_ + _).self.toList.sortBy(-_._2).takeWhile(_._2 > 0).take(100).map(x => {
                                                 index.rmap(x._1)
                                             }).sorted.mkString(" ")
                                         }

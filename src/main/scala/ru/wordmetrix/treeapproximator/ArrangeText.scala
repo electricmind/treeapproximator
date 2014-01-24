@@ -18,6 +18,8 @@ import ru.wordmetrix.utils._
 import scala.annotation.tailrec
 import ru.wordmetrix.features.Features.String2Word
 import ru.wordmetrix.features.Features
+import ru.wordmetrix.vector.VectorHASH
+import ru.wordmetrix.vector.VectorList
 
 /**
  *  ArrangeText is a strategy that places a bunch of text in convenient fashion.
