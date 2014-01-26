@@ -8,6 +8,7 @@ import ru.wordmetrix.utils.CFG
 import ru.wordmetrix.vector.Vector
 import java.io.File
 import ru.wordmetrix.smartfile.SmartFile.fromFile
+import EvaluatePriorityMatrix._
 
 class TestNetworkDump extends TestKit(ActorSystem("TestStorage"))
         with Tools
@@ -63,7 +64,10 @@ class TestNetworkDump extends TestKit(ActorSystem("TestStorage"))
             Thread.sleep(300)
 
             assert((cfg.path / "network.gml").readLines.mkString == net2)
-
+            
+            watch(storage)
+            queue.send(storage, EvaluatePriorityMatrixStop)
+            expectTerminated(storage)
         }
     }
 }
