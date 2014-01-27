@@ -52,7 +52,7 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
             }
 
             // Initial seed is sent     
-            queue ! EvaluatePriorityMatrixSeed(uri(1))
+            queue ! EvaluatePriorityMatrixSeed(Set(uri(1)))
 
             storage.expectMsgClass(classOf[StorageVictim])
 
@@ -133,7 +133,7 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
             }
 
             // Initial seed is sent     
-            queue ! EvaluatePriorityMatrixSeed(uri(1))
+            queue ! EvaluatePriorityMatrixSeed(Set(uri(1)))
 
             storage.expectMsgClass(classOf[StorageVictim])
 
