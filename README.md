@@ -53,6 +53,6 @@ Version 1.0, 20131101, Initial release
 
 Version 1.1, 20140114, Use akka.actor, build with sbt and make a few enhancements
 
-Version 1.2, 20140122, Move libraries out, implement ArrangeText as independent tool and factor out priority forecasting code
-
+Version 1.2, 20140129, Move libraries out, implement ArrangeText as independent tool and factor out priority forecasting code, add initialization with  multiply seeds
+and permission to cross intersite links.
 
