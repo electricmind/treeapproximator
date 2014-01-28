@@ -48,7 +48,7 @@ class TestNetworkDump extends TestKit(ActorSystem("TestStorage"))
             ))
 
             Thread.sleep(300)
-
+    
             assert((cfg.path / "network.gml").readLines.mkString == net1)
 
             queue.send(storage, GMLStorageSeed(

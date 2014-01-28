@@ -28,6 +28,13 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
     import SampleHierarchy2Priority._
 
     val cfg = CFG(isdebug = true, targets = 2, targeting = 0.005)
+    def checkuri(n: Int): PartialFunction[Any, Unit] = {
+        val u = uri(n)
+
+        {
+            case (SeedQueueRequest(`u`)) =>
+        }
+    }
 
     "A queue" should {
         "init a process" in {
@@ -42,14 +49,6 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
                     storageprop, gatherprop, seedqueueprop, sampleprop,
                     gmlprop, cfg),
                 "TestEvaluatePriority_1")
-
-            def checkuri(n: Int): PartialFunction[Any, Unit] = {
-                val u = uri(n)
-
-                {
-                    case (SeedQueueRequest(`u`)) =>
-                }
-            }
 
             // Initial seed is sent     
             queue ! EvaluatePriorityMatrixSeed(Set(uri(1)))
@@ -66,20 +65,16 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
             // Targeting phase
             gather.send(queue, GatherSeeds(uri(1), Set(uri(2), uri(3), uri(4), uri(5), uri(6), uri(7), uri(8)), Vector(1 -> 2.0)))
 
-            seedqueue.expectMsgPF()(checkuri(2))
+            val uris = (1 to 7).map(n => {
+                seedqueue.expectMsgPF() {
+                    case (SeedQueueRequest(x)) =>  x
+                }
+            }).toSet
 
-            seedqueue.expectMsgPF()(checkuri(3))
-
-            seedqueue.expectMsgPF()(checkuri(4))
-
-            seedqueue.expectMsgPF()(checkuri(5))
-
-            seedqueue.expectMsgPF()(checkuri(6))
-
-            seedqueue.expectMsgPF()(checkuri(7))
+            assert(uris == Set(2, 3, 4, 5, 6, 7, 8).map(uri(_)))
 
             storage.expectMsg(StorageSign(uri(1)))
-            println("sent uri2")
+
             gather.send(queue, GatherSeeds(uri(2), Set(uri(4), uri(5)), Vector(1 -> 2.0, 2 -> 4.0)))
 
             storage.expectMsg(StorageSign(uri(2)))
@@ -88,23 +83,16 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
 
             storage.expectMsg(StorageSign(uri(3)))
 
-            println("sent uri4")
             gather.send(queue, GatherSeeds(uri(4), Set(uri(4), uri(5)), Vector(1 -> 2.0, 4 -> 2.0)))
-
-            println("sent uri5")
 
             gather.send(queue, GatherSeeds(uri(5), Set(uri(6), uri(7)), Vector(1 -> 2.0, 5 -> 1.0)))
 
             storage.expectMsg(StorageSign(uri(5)))
 
-            println("sent uri6")
-
             // Estimation phase
             gather.send(queue, GatherSeeds(uri(6), Set(uri(6), uri(7)), Vector(1 -> 2.0, 6 -> 0.5)))
 
             gather.send(queue, GatherSeeds(uri(7), Set(uri(6), uri(7)), Vector(1 -> 2.0, 7 -> 0.25)))
-
-            seedqueue.expectMsg(SeedQueueRequest(uri(8)))
 
             // TODO: I need an available test, it is a specific case when targeting phase is completed but there are no links to continue after targeting phase
 
@@ -124,14 +112,6 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
                     storageprop, gatherprop, seedqueueprop, sampleprop, gmlprop, cfg),
                 "TestEvaluatePriority_2")
 
-            def checkuri(n: Int): PartialFunction[Any, Unit] = {
-                val u = uri(n)
-
-                {
-                    case (SeedQueueRequest(`u`)) =>
-                }
-            }
-
             // Initial seed is sent     
             queue ! EvaluatePriorityMatrixSeed(Set(uri(1)))
 
@@ -149,18 +129,14 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
 
             gather.send(queue, GatherSeeds(uri(1), Set(uri(2), uri(3), uri(4), uri(5), uri(6), uri(7)), Vector(1 -> 2.0)))
 
-            seedqueue.expectMsgPF()(checkuri(2))
+            val uris = (1 to 6).map(n => {
+                seedqueue.expectMsgPF() {
+                    case (SeedQueueRequest(x)) => x
+                }
+            }).toSet
 
-            seedqueue.expectMsgPF()(checkuri(3))
-
-            seedqueue.expectMsgPF()(checkuri(4))
-
-            seedqueue.expectMsgPF()(checkuri(5))
-
-            seedqueue.expectMsgPF()(checkuri(6))
-
-            seedqueue.expectMsgPF()(checkuri(7))
-
+            uris should be (Set(2,3,4,5,6,7).map(uri(_)))
+            
             seedqueue.expectMsg(EvaluatePriorityMatrixStopTargeting)
 
             gather.send(queue, EvaluatePriorityMatrixStopTargeting)

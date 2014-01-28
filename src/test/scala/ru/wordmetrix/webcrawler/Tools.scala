@@ -26,9 +26,13 @@ trait Tools extends Matchers {
                       </html>
 
     def text(n: Int): String = {
-        println(xml(n))
         Html2Ascii(xml(n)).wrap()
     }
+
+    def textr(n: Int): String = {
+        Html2Ascii(xml(n)).rectify()
+    }
+
     def TestActor(actor: TestProbe)(implicit system: akka.actor.ActorSystem): (TestProbe, Props) = {
         (actor, Props(new Actor {
             def receive = { case msg => actor.ref forward msg }

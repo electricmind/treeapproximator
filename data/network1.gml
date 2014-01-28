@@ -23,6 +23,7 @@ target 1
 value 0.0
 angle 1.0
 exist true
+propagate false
 
 ]
 

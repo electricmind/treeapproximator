@@ -34,6 +34,7 @@ target 1
 value 0.0
 angle 1.0
 exist true
+propagate false
 
 ]
 
@@ -46,6 +47,7 @@ target 2
 value 2.23606797749979
 angle 0.0
 exist true
+propagate false
 
 ]
 
@@ -58,6 +60,7 @@ target 1
 value 2.23606797749979
 angle 0.0
 exist true
+propagate true
 
 ]
 
@@ -70,6 +73,7 @@ target 2
 value 0.0
 angle 1.0
 exist true
+propagate false
 
 ]
 

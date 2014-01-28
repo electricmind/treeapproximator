@@ -75,7 +75,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 )
 
                 // Return text
-                storage.expectMsg(GatherIntel(uri(1), text(1)))
+                storage.expectMsg(GatherIntel(uri(1), textr(1)))
 
                 // Return link context
                 sample.expectMsg(linkcontext(1))
@@ -109,7 +109,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 )
 
                 // Return text
-                storage.expectMsg(GatherIntel(uri(1), text(1)))
+                storage.expectMsg(GatherIntel(uri(1), textr(1)))
 
                 // Return link context
                 sample.expectMsg(linkcontext(1))
@@ -182,7 +182,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 Set(uri(1), uri(2), uri(3)),
                 Vector(1 -> 15.0))
             )
-            storage.expectMsg(GatherIntel(uri(1), text(1)))
+            storage.expectMsg(GatherIntel(uri(1), textr(1)))
 
             sample.expectMsg(GatherLinkContext(
                 uri(1),
@@ -215,7 +215,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 Vector(1 -> 15.0))
             )
 
-            storage.expectMsg(GatherIntel(uri(2), text(1)))
+            storage.expectMsg(GatherIntel(uri(2), textr(1)))
 
             sample.expectMsg(GatherLinkContext(
                 uri(2),
