@@ -1,9 +1,11 @@
 package ru.wordmetrix.treeapproximator
 
 import ru.wordmetrix.vector._
+
 import TreeApproximator._
 import scala.annotation.tailrec
 import scala.collection.immutable.Stream.consWrapper
+import Math.sqrt
 
 //TODO: add diversity computation 
 //TODO: Compute energy during changing an item
@@ -160,7 +162,15 @@ trait TreeApproximator[F, V] extends Iterable[(Vector[F], V)] with Serializable 
         //        println(path.mkString(" / "))
         estimate(this, path)._2
     }
-
+    
+    def pathlength() = this.sliding(2).map({
+        case List((x,_),(y,_)) => (x.normal - y.normal).sqr
+    }).foldLeft((0.0,0)) {
+        case ((sum, n), sqr) => (sum + sqr, n+1)
+    } match {
+        case (_,0) => 0
+        case (sqr, n) => sqrt(sqr / n)
+    }
 }
 
 class TreeApproximatorEmpty[F, V](implicit val ord: Ordering[F]) extends TreeApproximator[F, V] {

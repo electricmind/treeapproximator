@@ -146,7 +146,10 @@ class ArrangeTextDumpHTML[U <: File2URIBase](val arrangetree: ArrangeText,
                             point out to the pages with similar 
                             content. The words in the title describes  traits 
                             of the content, up to 100 words are printed out 
-                            above an article when group is opened.
+                            above an article when group is opened. Length of 
+                            path through the tree equals
+                        { arrangetree.tree_aligned.pathlength }
+                        .
                     </p>
                 </div>
                 <div id="top" style="height:150px"> </div>

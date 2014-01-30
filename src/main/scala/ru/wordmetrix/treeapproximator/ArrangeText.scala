@@ -111,17 +111,21 @@ class ArrangeText()(implicit cfg: CFG) {
 
     def tree_opt: Tree = (1 to cfg.rectify).foldLeft(tree_raw)({
         case (tree, n) =>
-            log.time("Rectifying #%3d = %4.3f %d, size = %s".format(
-                n, tree.energy2, tree.average.size, tree.toList.length)
+            log.time("Rectifying #%3d = %4.3f %d, size = %s, length = %s".format(
+                n, tree.energy2, tree.average.size, tree.toList.length, 
+                tree.align()._1.pathlength)
             ) {
                 tree.rectify(tree.n)
             }
     })
 
     def tree_aligned = (cfg.path / "tree.dat") cache {
-        val q = tree_opt.align()._1
-        debug("tree_algigned size = %s", q.toList.length)
-        q
+        val tree = tree_opt.align()._1
+ //       debug("tree_aligned size = %s", tree_opt.toList.length)
+        val size = tree.size
+        val pathlength = tree.pathlength
+        log("Average distance = %f (%f/%d)", pathlength/size, pathlength, size)
+        tree
     }
 
     lazy val tree: Tree = tree_aligned
