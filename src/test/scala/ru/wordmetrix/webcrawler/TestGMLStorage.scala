@@ -21,9 +21,10 @@ class TestNetworkDump extends TestKit(ActorSystem("TestStorage"))
 
     import GMLStorage._
 
-    implicit val cfg = CFG(path = new File("/tmp/test"))
+    implicit val cfg = CFG(path = new File("/tmp/test"),isdebug=false)
 
     val net1 = (new File(".") / "data" / "network1.gml").readLines.mkString
+    
     val net2 = (new File(".") / "data" / "network2.gml").readLines.mkString
 
     "A networkstorage" should {
@@ -64,6 +65,8 @@ class TestNetworkDump extends TestKit(ActorSystem("TestStorage"))
             Thread.sleep(300)
 
             assert((cfg.path / "network.gml").readLines.mkString == net2)
+            
+            assert(net1 != net2)
             
             watch(storage)
             queue.send(storage, EvaluatePriorityMatrixStop)
