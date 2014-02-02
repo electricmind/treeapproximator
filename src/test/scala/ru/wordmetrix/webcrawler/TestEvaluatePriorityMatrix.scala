@@ -43,11 +43,12 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
             val (seedqueue, seedqueueprop) = TestActor()
             val (sample, sampleprop) = TestActor()
             val (gml, gmlprop) = TestActor()
+            val (linedstorage, linkedstorageprop) = TestActor()
 
             val queue = system.actorOf(
                 EvaluatePriorityMatrix.props(
                     storageprop, gatherprop, seedqueueprop, sampleprop,
-                    gmlprop, cfg),
+                    gmlprop, linkedstorageprop, cfg),
                 "TestEvaluatePriority_1")
 
             // Initial seed is sent     
@@ -106,10 +107,12 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
             val (seedqueue, seedqueueprop) = TestActor()
             val (sample, sampleprop) = TestActor()
             val (gml, gmlprop) = TestActor()
+            val (linkedstorage, linkedstorageprop) = TestActor()
 
             val queue = system.actorOf(
                 EvaluatePriorityMatrix.props(
-                    storageprop, gatherprop, seedqueueprop, sampleprop, gmlprop, cfg),
+                    storageprop, gatherprop, seedqueueprop, sampleprop, gmlprop,
+                    linkedstorageprop, cfg),
                 "TestEvaluatePriority_2")
 
             // Initial seed is sent     

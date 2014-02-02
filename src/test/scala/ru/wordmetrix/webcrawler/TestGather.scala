@@ -51,13 +51,16 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             val storage = TestProbe()
             val sample = TestProbe()
             val gml = TestProbe()
+            val linkedvectors = TestProbe()
 
             val gather = testParent(
                 Gather.props(cfg),
                 testActor,
                 "Gather_1")
 
-            queue.send(gather, GatherLink(storage.ref, sample.ref, gml.ref))
+            queue.send(gather, GatherLink(storage.ref, sample.ref, gml.ref,
+                linkedvectors.ref))
+
             queue.send(gather, GatherPage(uri(1), xml(1).toString))
 
             within(400 milliseconds) {
@@ -67,7 +70,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                     Set(uri(1), uri(2), uri(3)),
                     Vector(1 -> 15.0))
                 )
-                
+
                 gml.expectMsg(GMLStorageSeed(
                     uri(1),
                     Set(uri(1), uri(2), uri(3)),
@@ -87,34 +90,36 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             val storage = TestProbe()
             val sample = TestProbe()
             val gml = TestProbe()
+            val linkedvectors = TestProbe()
 
             val gather = testParent(
                 Gather.props(cfg),
                 testActor,
                 "Gather_1")
 
-            queue.send(gather, GatherLink(storage.ref, sample.ref, gml.ref))
+            queue.send(gather, GatherLink(storage.ref, sample.ref, gml.ref,
+                linkedvectors.ref))
             queue.send(gather, GatherPage(uri(1), xml(1).toString))
             queue.send(gather, EvaluatePriorityMatrixStopTargeting)
 
-                expectMsg(GatherSeeds(
-                    uri(1),
-                    Set(uri(1), uri(2), uri(3)),
-                    Vector(1 -> 15.0))
-                )
-                gml.expectMsg(GMLStorageSeed(
-                    uri(1),
-                    Set(uri(1), uri(2), uri(3)),
-                    Vector(1 -> 15.0))
-                )
+            expectMsg(GatherSeeds(
+                uri(1),
+                Set(uri(1), uri(2), uri(3)),
+                Vector(1 -> 15.0))
+            )
+            gml.expectMsg(GMLStorageSeed(
+                uri(1),
+                Set(uri(1), uri(2), uri(3)),
+                Vector(1 -> 15.0))
+            )
 
-                // Return text
-                storage.expectMsg(GatherIntel(uri(1), textr(1)))
+            // Return text
+            storage.expectMsg(GatherIntel(uri(1), textr(1)))
 
-                // Return link context
-                sample.expectMsg(linkcontext(1))
-                
-                expectMsg(EvaluatePriorityMatrixStopTargeting)
+            // Return link context
+            sample.expectMsg(linkcontext(1))
+
+            expectMsg(EvaluatePriorityMatrixStopTargeting)
 
         }
 
@@ -123,6 +128,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             val storage = TestProbe()
             val sample = TestProbe()
             val gml = TestProbe()
+            val linkedstorage = TestProbe()
 
             val gather = testParent(
                 Gather.props(cfg),
@@ -134,7 +140,8 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                                                                              <p><a href={ uri(2).toString } shape="rect">Gather!</a></p>
                                                                          </body></html>
 
-            queue.send(gather, GatherLink(storage.ref, sample.ref, gml.ref))
+            queue.send(gather, GatherLink(storage.ref, sample.ref, gml.ref,
+                linkedstorage.ref))
             queue.send(gather, GatherPage(uri(1), xml.toString))
 
             // Return link context
@@ -164,12 +171,13 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             val storage = TestProbe()
             val sample = TestProbe()
             val gml = TestProbe()
+            val linkedstorage = TestProbe()
 
             val gather = testParent(
                 Gather.props(cfg), testActor,
                 "Gather_3")
 
-            queue.send(gather, GatherLink(storage.ref, sample.ref, gml.ref))
+            queue.send(gather, GatherLink(storage.ref, sample.ref, gml.ref, linkedstorage.ref))
             queue.send(gather, GatherPage(uri(1), xml(1).toString))
 
             expectMsg(GatherSeeds(
@@ -177,7 +185,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 Set(uri(1), uri(2), uri(3)),
                 Vector(1 -> 15.0))
             )
-             gml.expectMsg(GMLStorageSeed(
+            gml.expectMsg(GMLStorageSeed(
                 uri(1),
                 Set(uri(1), uri(2), uri(3)),
                 Vector(1 -> 15.0))
@@ -208,7 +216,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 Set(),
                 Vector(1 -> 15.0))
             )
-            
+
             gml.expectMsg(GMLStorageSeed(
                 uri(2),
                 Set(uri(1), uri(2), uri(3)),
@@ -241,12 +249,14 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
             val storage = TestProbe()
             val sample = TestProbe()
             val gml = TestProbe()
+            val linkedstorage = TestProbe()
 
             val gather = testParent(
                 Gather.props(cfg), testActor,
                 "Gather_4")
 
-            queue.send(gather, GatherLink(storage.ref, sample.ref, gml.ref))
+            queue.send(gather, GatherLink(storage.ref, sample.ref, gml.ref,
+                linkedstorage.ref))
             queue.send(gather, GatherPage(uri(1),
                 <html>
                     <body>
@@ -268,7 +278,7 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
                 Set(uri(1)),
                 Vector())
             )
-            
+
             storage.expectMsgClass(classOf[GatherIntel[String]])
 
             sample.expectMsg(GatherLinkContext(

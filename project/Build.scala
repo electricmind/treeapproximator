@@ -11,6 +11,6 @@ object WebCrawlerBuild extends Build {
         )
 
     lazy val utils =
-        RootProject(uri("https://github.com/electricmind/utils.git"))
+        RootProject(uri("https://github.com/electricmind/utils.git#smartfile_append"))
 }
 
