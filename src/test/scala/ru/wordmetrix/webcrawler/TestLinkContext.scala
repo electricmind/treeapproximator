@@ -2,6 +2,7 @@ package ru.wordmetrix.webcrawler
 
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
+import ru.wordmetrix.utils.CFG
 import ru.wordmetrix.webcrawler._
 import LinkContext._
 import java.net.URI
@@ -9,7 +10,9 @@ import org.scalatest.WordSpecLike
 
 class TestLinkContext extends WordSpecLike with Matchers {
 
+    implicit val cfg = CFG(accuracy = 0.0001d)
     val extract = new LinkContext(new URI(""))
+
     "An simple xml" should {
         "gives a map with empty vectors" in {
 

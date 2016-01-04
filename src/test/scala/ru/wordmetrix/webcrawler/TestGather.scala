@@ -20,8 +20,10 @@ class TestGather extends TestKit(ActorSystem("TestKitUsageSpec"))
         with DefaultTimeout with ImplicitSender
         with WordSpecLike with Matchers with BeforeAndAfterAll {
 
+    implicit val accuracy = 0.0001d
+
     override def afterAll(): Unit = {
-        system.shutdown()
+        system.terminate()
     }
 
     import Gather._

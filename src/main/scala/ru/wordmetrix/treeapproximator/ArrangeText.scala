@@ -28,16 +28,15 @@ import ru.wordmetrix.vector.VectorList
  *  arranged by similarity, a set of clusters placed into folders and a web-
  *  page of links on web pages (assuming that an original URI is available).
  */
-
 object ArrangeText extends App {
     override def main(args: Array[String]) {
         val (command, args1) = args match {
             case Array(command, args @ _*) if Set("tree", "cluster", "links")(command) =>
                 (Some(command), args.toList)
 
-            case args @ Array(arg, _@ _*) => (Some("all"), args.toList)
+            case args @ Array(arg, _@_*) => (Some("all"), args.toList)
 
-            case args @ _ =>
+            case args =>
                 println("\nEnter: (tree | cluster | links) [Options] [<FILE> [..]]\n")
                 (None, args.toList)
         }
@@ -77,6 +76,8 @@ object ArrangeText extends App {
 }
 
 abstract class ArrangeTextDump(arrangetree: ArrangeText)(implicit cfg: CFG) {
+    implicit def accuracy = cfg.accuracy
+
     def vector2Title(v: Vector[String], n: Int = 5, stopword: Set[String] = Set(" ")) = {
         v.toList.sortBy(-_._2).takeWhile(_._2 > 0d).map(_._1).filterNot(stopword).filterNot(Set(" ", "")).take(n).mkString(" ")
     }
@@ -87,6 +88,8 @@ abstract class ArrangeTextDump(arrangetree: ArrangeText)(implicit cfg: CFG) {
 }
 
 class ArrangeText()(implicit cfg: CFG) {
+    implicit def accuracy = cfg.accuracy
+
     type Word = Int
     type Node = TreeApproximator.Node[Word, File]
     type Tree = TreeApproximator.Tree[Word, File]

@@ -18,7 +18,7 @@ object TreeApproximator {
     type Tree[F, V] = TreeApproximator[F, V]
     type State[F, V] = (Option[Leaf[F, V]], List[Tree[F, V]])
 
-    def apply[F, V](vs: (Vector[F], V)*)(implicit ord: Ordering[F]): Tree[F, V] =
+    def apply[F, V](vs: (Vector[F], V)*)(implicit ord: Ordering[F], accuracy: Double): Tree[F, V] =
         vs.foldLeft[TreeApproximator[F, V]](new TreeApproximatorEmpty[F, V]())({
             case (tree, (vector, value)) => tree + (vector, value)
         })
@@ -84,6 +84,7 @@ object TreeApproximator {
 
 trait TreeApproximator[F, V] extends Iterable[(Vector[F], V)] with Serializable {
     implicit val ord: Ordering[F]
+    implicit val accuracy: Double
     val average: Vector[F]
 
     def bind(
@@ -163,7 +164,7 @@ trait TreeApproximator[F, V] extends Iterable[(Vector[F], V)] with Serializable 
 
 }
 
-class TreeApproximatorEmpty[F, V](implicit val ord: Ordering[F]) extends TreeApproximator[F, V] {
+class TreeApproximatorEmpty[F, V](implicit val ord: Ordering[F], val accuracy: Double) extends TreeApproximator[F, V] {
     def /(n: Int): Tree[F, V] = this
     def +(vector: Vector[F], value: V): Tree[F, V] = new Leaf(vector, value)
     def align(v: Vector[F]): (Tree[F, V], Vector[F]) = (this, Vector[F]())
@@ -181,7 +182,7 @@ class TreeApproximatorEmpty[F, V](implicit val ord: Ordering[F]) extends TreeApp
 }
 
 class TreeApproximatorNode[F, V](val child1: TreeApproximator[F, V],
-                                 val child2: TreeApproximator[F, V])(implicit val ord: Ordering[F])
+                                 val child2: TreeApproximator[F, V])(implicit val ord: Ordering[F], val accuracy: Double)
         extends TreeApproximator[F, V] {
     val average = (child1.average + child2.average) clearMinors (4000)
 
@@ -277,7 +278,7 @@ class TreeApproximatorNode[F, V](val child1: TreeApproximator[F, V],
 
 class TreeApproximatorLeaf[F, V](
     val average: Vector[F], val value: V)(
-        implicit val ord: Ordering[F])
+        implicit val ord: Ordering[F], val accuracy: Double)
         extends TreeApproximator[F, V] {
     def +(vector: Vector[F], value: V) = new TreeApproximatorNode[F, V](
         this, new TreeApproximatorLeaf[F, V](vector, value))

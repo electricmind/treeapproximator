@@ -19,6 +19,7 @@ import ru.wordmetrix.vector.Vector
 
 object Draw2DMap extends SimpleSwingApplication {
     implicit val cfg = CFG(isdebug=true)
+
     val colors = Iterator.iterate(List(
         Color.red, Color.orange, Color.yellow,
         Color.green, Color.blue, Color.magenta))({
@@ -33,16 +34,17 @@ object Draw2DMap extends SimpleSwingApplication {
     }
     type Value = (Vector[Int], Set[Vector[Int]], Int)
 
-    def randomVector(d: Double, dimension: Int, av: Vector[Int]) =
+    def randomVector(d: Double, dimension: Int, av: Vector[Int]) = {
+        implicit def accuracy = cfg.accuracy
+
         ((3 to dimension).map(
             dim => Vector(dim -> Math.abs(nextGaussian * d))
         ).fold(Vector(
-                1 -> (nextGaussian * d),
-                2 -> (nextGaussian * d)
-            ))(_ + _) + av).normal
-
-    def generate2tree1(cloud: Iterable[(Vector[Int], Int)], d: Double, n: Int, dimension: Int) =
-
+            1 -> (nextGaussian * d),
+            2 -> (nextGaussian * d)
+        ))(_ + _) + av).normal
+    }
+    def generate2tree1(cloud: Iterable[(Vector[Int], Int)], d: Double, n: Int, dimension: Int)(implicit  accuracy: Double) =
         cloud.foldLeft(TreeApproximator[Int, Value]())({
             case (tree, (key, cid)) =>
                 tree + (key, (key, Set(), cid)) rectify(2)
@@ -51,6 +53,7 @@ object Draw2DMap extends SimpleSwingApplication {
     def top = new MainFrame {
         title = "Convert Celsius / Fahrenheit"
         size = new Dimension(640, 480)
+        implicit def accuracy = 0.0001d
         var n = 50
         var dispersy = 0.5
         var dimension = 3
