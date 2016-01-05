@@ -179,7 +179,9 @@ class ArrangeTextDumpHTML[U <: File2URIBase](val arrangetree: ArrangeText,
                                                 else <a target="_blank" href={ uri.toString } color="gray"> {
                                                     name(file)
                                                 } </a>
-                                            } </nobr></li>
+                                            } </nobr>
+                                            </li>
+
                                         }).getOrElse("")
                                 }
                             } </ul> </div>
@@ -235,9 +237,9 @@ abstract class File2URIBase()(implicit cfg: CFG) {
 class File2URITransform()(implicit cfg: CFG) extends File2URIBase {
     def get(f: File): Option[URI] =
         f.getName().split("-") match {
-            case Array(x, y, z)       => Some(new URI("http://" + x + "/" + y + "/" + z))
-            case Array(x, y, z1, z2)  => Some(new URI("http://" + x + "/" + y + "/" + z1 + ":" + z2))
-            case Array(x, y, ls @ _*) => Some(new URI("http://" + x + "/" + y + "/" + ls.dropRight(1).mkString(":") + "/" + ls.lastOption.getOrElse("")))
+            case Array(x, y, z)       => Try(new URI("http://" + x + "/" + y + "/" + z)).toOption
+            case Array(x, y, z1, z2)  => Try(new URI("http://" + x + "/" + y + "/" + z1 + ":" + z2)).toOption
+            case Array(x, y, ls @ _*) => Try(new URI("http://" + x + "/" + y + "/" + ls.dropRight(1).mkString(":") + "/" + ls.lastOption.getOrElse(""))).toOption
             case _                    => None
         }
 }

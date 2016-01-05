@@ -10,6 +10,8 @@ import Math.abs
 import ru.wordmetrix.treeapproximator.TreeApproximatorNode
 import ru.wordmetrix.treeapproximator.TreeApproximator
 class testTreeApproximator extends FlatSpec with Matchers {
+    implicit val accuracy = 0.0001d
+
     val v1 = Vector(1 -> 1, 4 -> 0)
     val v21 = Vector(1 -> 1, 5 -> 1)
     val v2 = Vector(2 -> 1, 4 -> 0)
@@ -38,7 +40,7 @@ class testTreeApproximator extends FlatSpec with Matchers {
 
         TreeApproximator(v1 -> 1, v2 -> 1).energy should be(0.70 plusOrMinus 0.01)
         TreeApproximator(v1 -> 1, v2 -> 1, v3 -> 1).energy should
-            be((1 + 1 + 2) / 6.)
+            be((1 + 1 + 2) / 6.0)
         /*TreeApproximator(v1 -> 1, v2 -> 1, v3 -> 1, v4 -> 1).energy should
             be((1 + 1 + 2 + 3 + 2 + 2) / 4.)*/
     }
@@ -52,13 +54,13 @@ class testTreeApproximator extends FlatSpec with Matchers {
     }
 
     "A leaf" should "return the same vector" in {
-        TreeApproximator(v1 -> 1)(Ordering[Int])(v1) should be(1)
-        TreeApproximator(v1 -> 1)(Ordering[Int])(v2) should be(1)
-        TreeApproximator(v1 -> 1)(Ordering[Int])(v3) should be(1)
+        TreeApproximator(v1 -> 1)(Ordering[Int], accuracy)(v1) should be(1)
+        TreeApproximator(v1 -> 1)(Ordering[Int], accuracy)(v2) should be(1)
+        TreeApproximator(v1 -> 1)(Ordering[Int], accuracy)(v3) should be(1)
 
-        TreeApproximator(v2 -> 2)(Ordering[Int])(v1) should be(2)
-        TreeApproximator(v2 -> 2)(Ordering[Int])(v2) should be(2)
-        TreeApproximator(v2 -> 2)(Ordering[Int])(v3) should be(2)
+        TreeApproximator(v2 -> 2)(Ordering[Int], accuracy)(v1) should be(2)
+        TreeApproximator(v2 -> 2)(Ordering[Int], accuracy)(v2) should be(2)
+        TreeApproximator(v2 -> 2)(Ordering[Int], accuracy)(v3) should be(2)
     }
 
     "A node" should "be created from two vectors" in {

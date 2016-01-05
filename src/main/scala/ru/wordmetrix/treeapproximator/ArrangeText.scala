@@ -28,16 +28,15 @@ import ru.wordmetrix.vector.VectorList
  *  arranged by similarity, a set of clusters placed into folders and a web-
  *  page of links on web pages (assuming that an original URI is available).
  */
-
 object ArrangeText extends App {
     override def main(args: Array[String]) {
         val (command, args1) = args match {
             case Array(command, args @ _*) if Set("tree", "cluster", "links")(command) =>
                 (Some(command), args.toList)
 
-            case args @ Array(arg, _@ _*) => (Some("all"), args.toList)
+            case args @ Array(arg, _@_*) => (Some("all"), args.toList)
 
-            case args @ _ =>
+            case args =>
                 println("\nEnter: (tree | cluster | links) [Options] [<FILE> [..]]\n")
                 (None, args.toList)
         }
@@ -77,6 +76,8 @@ object ArrangeText extends App {
 }
 
 abstract class ArrangeTextDump(arrangetree: ArrangeText)(implicit cfg: CFG) {
+    implicit def accuracy = cfg.accuracy
+
     def vector2Title(v: Vector[String], n: Int = 5, stopword: Set[String] = Set(" ")) = {
         v.toList.sortBy(-_._2).takeWhile(_._2 > 0d).map(_._1).filterNot(stopword).filterNot(Set(" ", "")).take(n).mkString(" ")
     }
@@ -87,6 +88,8 @@ abstract class ArrangeTextDump(arrangetree: ArrangeText)(implicit cfg: CFG) {
 }
 
 class ArrangeText()(implicit cfg: CFG) {
+    implicit def accuracy = cfg.accuracy
+
     type Word = Int
     type Node = TreeApproximator.Node[Word, File]
     type Tree = TreeApproximator.Tree[Word, File]
@@ -144,10 +147,10 @@ class ArrangeText()(implicit cfg: CFG) {
     ) match {
             case (vectors, index) =>
                 val (empties, substantative) = vectors.partition({
-                    case (vs, filename) => vs.size == 0
+                    case (vs, filename) => vs.isEmpty
                 })
 
-                if (empties.size > 0)
+                if (empties.nonEmpty)
                     log("%s was rejected as empty", empties.size)
 
                 if (cfg.isdebug) empties.foreach {
@@ -175,6 +178,8 @@ class ArrangeText()(implicit cfg: CFG) {
                         }
                 }
 
+                cfg.path / "vocabulary_whole.txt" write index.map.keys.toList.sorted
+
                 (uniq.toStream,  index)
         }
 
@@ -183,7 +188,7 @@ class ArrangeText()(implicit cfg: CFG) {
             debug("Size tree: %s", tree.toList.size)
             val c = Clusters(tree_aligned)
             debug("clusters %s %s %s", c.size, c.iterator.toList.flatten.size,
-                c.heads.toList.map({ case (x, y) => y }).flatten.size)
+                c.heads.toList.flatMap{ _._2 }.size)
             c
         }
 

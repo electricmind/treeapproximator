@@ -17,12 +17,11 @@ class TestLinkedVectorsStorage extends TestKit(ActorSystem("TestStorage"))
         with WordSpecLike with Matchers with BeforeAndAfterAll {
 
     override def afterAll(): Unit = {
-        system.shutdown()
+        system.terminate()
     }
 
-    import GMLStorage._
-
     implicit val cfg = CFG(path = new File("/tmp/test"), isdebug = false)
+    implicit val accuracy = cfg.accuracy
 
     val matrix1 = (new File(".") / "data" / "matrix1.dat").readLines.mkString
 

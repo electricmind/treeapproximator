@@ -12,6 +12,7 @@ import org.scalatest.junit.JUnitRunner
 //@RunWith(classOf[JUnitRunner])
 class TestCluster extends FlatSpec with Matchers {
 // TODO: Move test vectors and clouds into separate file
+    implicit val accuracy = 0.0001d
     val v1 = Vector(1 -> 1, 4 -> 0)
     val v10 = Vector(1 -> 0, 4 -> 1)
     val v11 = Vector(1 -> 1, 4 -> 1)

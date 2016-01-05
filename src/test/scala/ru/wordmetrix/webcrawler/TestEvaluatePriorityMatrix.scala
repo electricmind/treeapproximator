@@ -17,8 +17,10 @@ class TestEvaluatePriorityMatrix extends TestKit(ActorSystem("TestEvalutatePrior
         with DefaultTimeout with ImplicitSender
         with WordSpecLike with Matchers with BeforeAndAfterAll {
 
+    implicit val accuracy = 0.0001d
+
     override def afterAll(): Unit = {
-        system.shutdown()
+        system.terminate()
     }
 
     import EvaluatePriorityMatrix._
