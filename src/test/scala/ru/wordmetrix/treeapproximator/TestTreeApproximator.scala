@@ -2,7 +2,6 @@ package test
 import ru.wordmetrix.vector.Vector
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers
-import ru.wordmetrix.webcrawler._
 import java.net.URL
 import java.net.URI
 import scala.util.Random.{ nextBoolean, nextGaussian }
