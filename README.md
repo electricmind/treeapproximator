@@ -1,14 +1,8 @@
-webcrawler
-==========
+treeapproximator
+================
+TreeApproximator is a tool that allows to arrange a set of files (text or html ones) into a tree, that can be represented as catalog or html-file. It uses our own version of Hierarchical Clustering.
 
-Simple web crawler is intended to gather a text corpus to scrutinize doing an NLP-like research. It scans a web site retrieving those pages, that are similar with the initial one. Heirarchical clustering allows to fine-tune this sample later.
-
-
-Targeted getting information from a site
------------------------------------------
-The idea is quite simple: get the pages that are linked to an initial one or its descendants. Unfortunately a lot of auxiliary pages exists on real site that refers to everywhere that leads a download process away from a subject after a second level of links. Unlike a typical based on a network analysis, I have implemented a different approach: Algorithm maintains a cluster of pages that are similar with initial one and follows links in order of a priority queue, where priority comes from comparison of page that contains a link against the cluster. It produces the intended result: web crawler chooses similar pages even though it already got a few wrong ones, but requires a few tricks including online hierarchical clustering..
- 
-Hierarchical clustering
+Hierarchical Clustering
 -------------------------
 Hierarchical clustering arranges similar pages into a tree of groups, where each group defines a central vector. An algorithm starts with a group of two vectors, where central vector is their average. For each new vector it looks for the closest vector recursively choosing the closest central vector until until it encounters a leaf, which gets converted to a new pair of vectors. The algorithm updates central vector for every inner node on a path to the new vector.  For each new vector a learning step randomly removes a couple of vectors and inserts them back  to a tree (that leads to minimization of error).
 
@@ -25,11 +19,7 @@ into a few clusters, and, by product, aligned in a sequence of mutually similar 
 
 Current version is still incomplete and requires some redundant computation, but can be used as follows:
 
- * Issue a command `java -jar webcrawler-assembly-1.1.jar -path <Directory> <Initial URI>` to download 
- web-pages similar with initial one into the Directory. This command dumps pages
- in plain text.
-
- * Arrange pages with `java -cp webcrawler-assembly-1.1.jar ru.wordmetrix.treeapproximator.ArrangeText [links|clusters|tree] <Directory> [<List of files>]`, where:
+  `java -jar treeapproximator-assembly-1.3.jar [links|clusters|tree] <Directory> [<List of files>]`, where:
 
   * "links" dumps a page of references to the Wikipedia (for lack of a preliminary wishes it's just a desperate attempt to present an outcome, but looks fine),
 
@@ -48,11 +38,13 @@ I used this approach to arrange
 
 History
 ---------
-
-Version 1.0, 20131101, Initial release
+Version 1.0, 20131101, Initial release as a part of webcrawler
 
 Version 1.1, 20140114, Use akka.actor, build with sbt and make a few enhancements
 
 Version 1.2, 20140129, Move libraries out, implement ArrangeText as independent tool and factor out priority forecasting code, add initialization with  multiply seeds
 and permission to cross intersite links.
+
+Version 1.3, 20150129, Factor out ArrangeText tool into a separate repository.
+
 

@@ -1,7 +1,7 @@
 import sbt._
 
-object WebCrawlerBuild extends Build {
-  val Name = "webcrawler"
+object TreeApproximatorBuild extends Build {
+  val Name = "treeapproximator"
   val utils =
     RootProject(uri("https://github.com/electricmind/utils.git#scala-2_11"))
 
