@@ -1,4 +1,4 @@
-name := "webcrawler"
+name := "treeapproximator"
 
 version := "1.3"
 
