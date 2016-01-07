@@ -1,4 +1,4 @@
-package ru.wordmetrix.treeapproximator
+package ru.wordmetrix.arrangetext
 
 import java.io.File
 
@@ -6,6 +6,7 @@ import ru.wordmetrix.smartfile.SmartFile.fromFile
 import ru.wordmetrix.utils.Use.anyToUse
 import ru.wordmetrix.utils.{CFG, log}
 import ru.wordmetrix.vector.Vector
+import ru.wordmetrix.treeapproximator._
 
 class ArrangeTextDumpClusters(arrangetree: ArrangeText)(implicit cfg: CFG)
   extends ArrangeTextDump(arrangetree) {

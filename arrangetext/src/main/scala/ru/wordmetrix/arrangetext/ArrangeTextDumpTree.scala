@@ -1,4 +1,4 @@
-package ru.wordmetrix.treeapproximator
+package ru.wordmetrix.arrangetext
 
 import java.io.File
 
@@ -6,6 +6,7 @@ import ru.wordmetrix.smartfile.SmartFile.{fromFile, toFile}
 import ru.wordmetrix.utils._
 
 import scala.Array.canBuildFrom
+import ru.wordmetrix.treeapproximator._
 
 class ArrangeTextDumpTree(val arrangetree: ArrangeText)(implicit cfg: CFG)
   extends ArrangeTextDump(arrangetree) {

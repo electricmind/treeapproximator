@@ -1,4 +1,4 @@
-name := "treeapproximator_root"
+name := "treeapproximator"
 
 version := "1.3"
 

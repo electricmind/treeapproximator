@@ -1,8 +1,10 @@
-name := "treeapproximator_root"
+name := "arrangetext"
 
 version := "1.3"
 
 scalaVersion := "2.11.7"
+
+mainClass := Some("ru.wordmetrix.arrangetext.ArrangeText")
 
 libraryDependencies += "org.scala-lang.modules" %% "scala-swing" % "2.0.0-M2"
 

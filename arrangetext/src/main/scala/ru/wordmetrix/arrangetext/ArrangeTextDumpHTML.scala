@@ -1,4 +1,4 @@
-package ru.wordmetrix.treeapproximator
+package ru.wordmetrix.arrangetext
 
 import java.io.{File, FileInputStream}
 import java.net.URI
@@ -8,6 +8,7 @@ import org.xml.sax.InputSource
 import ru.wordmetrix.smartfile.SmartFile.fromFile
 import ru.wordmetrix.utils.{CFG, log}
 import sun.misc.BASE64Encoder
+import ru.wordmetrix.treeapproximator._
 
 import scala.Array.canBuildFrom
 import scala.Option.option2Iterable

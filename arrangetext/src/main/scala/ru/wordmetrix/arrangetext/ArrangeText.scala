@@ -1,4 +1,4 @@
-package ru.wordmetrix.treeapproximator
+package ru.wordmetrix.arrangetext
 
 import java.io.File
 
@@ -12,6 +12,7 @@ import scala.Option.option2Iterable
 import scala.annotation.tailrec
 import scala.util.Try
 import scala.util.matching.Regex
+import ru.wordmetrix.treeapproximator._
 
 /**
  * ArrangeText is a strategy that places a bunch of text in convenient fashion.
