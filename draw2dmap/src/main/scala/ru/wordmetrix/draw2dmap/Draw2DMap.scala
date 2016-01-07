@@ -1,4 +1,4 @@
-package ru.wordmetrix.treeapproximator
+package ru.wordmetrix.draw2dmap
 
 import java.awt.{BasicStroke, Color, Graphics2D, Point}
 import java.lang.Math.{max, sqrt}
@@ -14,6 +14,7 @@ import scala.swing.event.Key.{Down, Enter, Escape, Left, PageDown, PageUp, Right
 import scala.swing.event.{KeyPressed, KeyReleased, KeyTyped, MouseClicked, MouseMoved}
 import scala.swing.{Dimension, MainFrame, Panel, SimpleSwingApplication}
 import scala.util.Random.nextGaussian
+import ru.wordmetrix.treeapproximator._
 
 // TODO: try paint all clusters into different tinge.
 
@@ -153,7 +154,7 @@ object Draw2DMap extends SimpleSwingApplication {
           }
         this.repaint()
 
-      case KeyReleased(_, Space, 128, _) => {
+      case KeyReleased(_, Space, 128 | 640, _) => {
         tree = debug.time("align") {
           tree.align(Vector(1 -> 1.0))._1
         }
