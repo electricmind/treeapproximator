@@ -14,12 +14,11 @@ By means of maintaining an actual set of clusters from the beginning, the algori
 
 Usage
 -------
-An outcome of clustering technique is a bunch of articles that are arranged 
-into a few clusters, and, by product, aligned in a sequence of mutually similar items. Current implementation also uses a simple technique to elicit keywords that distinguish clusters from each other.
+An outcome of clustering technique is a bunch of articles that are arranged into a few clusters, and, by product, aligned in a sequence of mutually similar items. Current implementation also uses a simple technique to elicit keywords that distinguish clusters from each other.
 
 Current version is still incomplete and requires some redundant computation, but can be used as follows:
 
-  `java -jar treeapproximator-assembly-1.3.jar [links|clusters|tree] <Directory> [<List of files>]`, where:
+  `java -jar arrangetext-assembly-1.3.jar [links|clusters|tree] <Directory> [<List of files>]`, where:
 
   * "links" dumps a page of references to the Wikipedia (for lack of a preliminary wishes it's just a desperate attempt to present an outcome, but looks fine),
 
@@ -27,8 +26,10 @@ Current version is still incomplete and requires some redundant computation, but
 
   * "tree" arranges pages into a tree of  folders, each containing two subfolders along with a positional vector of its subcluster.
    
-An additional tool `java -cp webcrawler-assembly-1.1.jar ru.wordmetrix.treeapproximator.Draw2DMap [<File of Points>]` is a simple demo that 
+The additional tool `java -jar draw2dmap-assembly-1.3.jar [<File of Points>]` is a simple demo that 
 generates a few clouds of gaussian-distributed points and builds a tree.
+
+The package `treeapproximator_2.11-1.3.jar` holds an implementation of clustering algorithm.
 
 The outcome
 -----------
@@ -45,6 +46,6 @@ Version 1.1, 20140114, Use akka.actor, build with sbt and make a few enhancement
 Version 1.2, 20140129, Move libraries out, implement ArrangeText as independent tool and factor out priority forecasting code, add initialization with  multiply seeds
 and permission to cross intersite links.
 
-Version 1.3, 20150129, Factor out ArrangeText tool into a separate repository.
+Version 1.3, 20150129, Factor out ArrangeText tool into a separate repository
 
 
