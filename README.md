@@ -46,6 +46,8 @@ Version 1.1, 20140114, Use akka.actor, build with sbt and make a few enhancement
 Version 1.2, 20140129, Move libraries out, implement ArrangeText as independent tool and factor out priority forecasting code, add initialization with  multiply seeds
 and permission to cross intersite links.
 
-Version 1.3, 20150129, Factor out ArrangeText tool into a separate repository
+[Version 1.3](https://github.com/electricmind/treeapproximator/tree/v.1.3), 20150107, First independent release, measure quality of learning, add ability of usage VectorHASH 
+
+[Version 1.4](https://github.com/electricmind/treeapproximator/tree/v.1.4), 20150129, Factor out ArrangeText tool into a separate repository
 
 

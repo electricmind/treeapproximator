@@ -3,7 +3,7 @@ import sbt._
 object TreeApproximatorBuild extends Build {
   val Name = "treeapproximator_root"
   val utils =
-    RootProject(uri("https://github.com/electricmind/utils.git#scala-2_11"))
+    RootProject(uri("https://github.com/electricmind/utils.git#v.2.1"))
 
   override lazy val settings = super.settings
 
